@@ -27,7 +27,7 @@ st.set_page_config(page_title="Your Travel Plan", page_icon="🧭", layout="wide
 if "destination" not in st.session_state:
     st.error("Please go to the Home page first.")
     st.stop()
-
+st.write("🔍 Debug:", st.session_state)
 destination = st.session_state["destination"]
 budget = st.session_state["budget"]
 duration = st.session_state["duration"]
