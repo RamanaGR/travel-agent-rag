@@ -81,3 +81,23 @@ hr {
     margin-bottom: 20px;
 }
 
+/* 🔒 Hide Streamlit header and footer */
+header[data-testid="stHeader"] {
+    display: none;
+}
+footer {
+    visibility: hidden;
+}
+
+/* 🎨 Customize Streamlit header bar */
+header[data-testid="stHeader"] {
+    background: linear-gradient(to right, #00416A, #E4E5E6);
+    color: white !important;
+    height: 3rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Optional: hide Streamlit's right-side buttons */
+header [data-testid="baseButton-headerNoPadding"] {
+    visibility: hidden;
+}
