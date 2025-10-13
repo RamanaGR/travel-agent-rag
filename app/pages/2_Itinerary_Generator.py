@@ -1,5 +1,5 @@
 import os
-
+import re
 import streamlit as st
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -44,7 +44,7 @@ with st.spinner("Gathering top attractions..."):
 # --- Compose the LLM prompt ---
 prompt = f"""
 Plan a detailed {duration}-day travel itinerary for {destination} in {date}, under ${budget} budget.
-Highlight must-see attractions ({summary}), local culture, weather tips, and dining suggestions.
+Highlight must-see attractions ({summary}), local culture, weather tips, and dining suggestions. Response should be crisp and attractive.
 Provide a structured plan like:
 Day 1 – Morning / Afternoon / Evening.
 """
@@ -57,16 +57,49 @@ with st.spinner("✈️ Generating itinerary..."):
         messages=[{"role": "user", "content": prompt}]
     )
 
-plan = response.choices[0].message.content
-st.success("✅ Personalized itinerary ready!")
+raw_plan = response.choices[0].message.content.strip()
 
-# --- Display itinerary in styled container ---
-st.markdown("### 🗓️ Your Smart Itinerary")
-st.markdown(
-    f"<div style='background-color:#f9fafb;padding:20px;border-radius:12px;'>"
-    f"{plan.replace('\n', '<br>')}"
-    f"</div>",
-    unsafe_allow_html=True
+# --- Clean text ---
+plan = re.sub(r"[*#_`>]+", "", raw_plan).strip()
+
+# --- Split by day headings for structured display ---
+day_sections = re.split(r"\bDay\s*\d+", plan, flags=re.IGNORECASE)
+day_titles = re.findall(r"\bDay\s*\d+[^\n:]*", plan, flags=re.IGNORECASE)
+
+if not day_titles:
+    st.warning("Could not detect day sections clearly; displaying full text below.")
+    st.markdown(plan.replace("\n", "<br>"), unsafe_allow_html=True)
+else:
+    st.success("✅ Personalized itinerary ready!")
+
+    st.markdown("### 🗓️ Your Smart Itinerary")
+
+    for i, section in enumerate(day_sections[1:], start=1):
+        title = day_titles[i - 1].strip()
+        # Try to split into Morning / Afternoon / Evening
+        parts = re.split(r"(Morning|Afternoon|Evening)", section, flags=re.IGNORECASE)
+        st.markdown(f"#### 🌅 {title}")
+
+        with st.container():
+            for j in range(1, len(parts), 2):
+                time_label = parts[j].capitalize()
+                details = parts[j + 1].strip()
+                icon = "☀️" if "Morning" in time_label else ("🌆" if "Afternoon" in time_label else "🌙")
+                st.markdown(
+                    f"<div style='background-color:#f9fafb;padding:15px;border-radius:10px;margin-bottom:10px;'>"
+                    f"<b>{icon} {time_label}</b><br>{details.replace(chr(10), '<br>')}"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+st.divider()
+
+# --- Download option ---
+st.download_button(
+    label="📥 Download Itinerary",
+    data=plan,
+    file_name=f"{destination}_itinerary.txt",
+    mime="text/plain"
 )
 
 # --- Download option ---

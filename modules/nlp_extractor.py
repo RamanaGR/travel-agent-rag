@@ -29,52 +29,54 @@ nlp = load_spacy_model()
 
 def extract_entities(user_input):
     """
-    Extract destination city, travel dates, and budget from user input.
+    Extract destination, travel month, duration, and budget from user query.
     """
     doc = nlp(user_input)
     destination = None
-    start_date = None
-    end_date = None
     budget = None
-    duration_days = None
+    duration = None
+    month = None
 
-    # 1️⃣ Detect destination (GPE = city/country)
+    # 1️⃣ Destination (city/country)
     for ent in doc.ents:
         if ent.label_ == "GPE":
             destination = ent.text
             break
 
-    # 2️⃣ Detect budget ($ or “under 1000 dollars” etc.)
-    budget_match = re.search(r"\$?\s?(\d{2,5})\s?(USD|dollars|bucks|usd)?", user_input, re.IGNORECASE)
+    # 2️⃣ Budget (captures $1000, under 1200 dollars, etc.)
+    budget_match = re.search(r"(?:under|below|less than)?\s*\$?\s?(\d{2,5})", user_input, re.IGNORECASE)
     if budget_match:
         budget = int(budget_match.group(1))
 
-    # 3️⃣ Detect number of days (e.g., “3-day trip”)
-    duration_match = re.search(r"(\d+)(?:\s*[- ]?\s*)?(day|days|night|nights)", user_input, re.IGNORECASE)
+    # 3️⃣ Duration (e.g., 4-day, 5 nights)
+    duration_match = re.search(r"(\d+)\s*[- ]?(day|days|night|nights)", user_input, re.IGNORECASE)
     if duration_match:
-        duration_days = int(duration_match.group(1))
+        duration = int(duration_match.group(1))
 
-    # 4️⃣ Detect month or date (simple pattern)
-    month_match = re.search(r"(January|February|March|April|May|June|July|August|September|October|November|December)", user_input, re.IGNORECASE)
+    # 4️⃣ Month or travel period
+    month_match = re.search(
+        r"(January|February|March|April|May|June|July|August|September|October|November|December|next month|this month)",
+        user_input, re.IGNORECASE
+    )
     if month_match:
-        month_name = month_match.group(1).capitalize()
-        year = datetime.now().year
-        start_date = f"{month_name} {year}"
-        if duration_days:
-            # Roughly add duration
-            end_date = f"{month_name} {year}"
+        month_raw = month_match.group(1).lower()
+        if "next" in month_raw:
+            next_month = (datetime.now().month % 12) + 1
+            month = datetime(datetime.now().year, next_month, 1).strftime("%B %Y")
+        elif "this" in month_raw:
+            month = datetime.now().strftime("%B %Y")
+        else:
+            month = month_match.group(1).capitalize() + f" {datetime.now().year}"
     else:
-        # Default to next month
+        # Default fallback
         next_month = (datetime.now().month % 12) + 1
-        start_date = datetime(datetime.now().year, next_month, 1).strftime("%B %Y")
-        end_date = start_date
+        month = datetime(datetime.now().year, next_month, 1).strftime("%B %Y")
 
     return {
         "destination": destination,
         "budget": budget,
-        "duration_days": duration_days,
-        "start_date": start_date,
-        "end_date": end_date,
+        "duration": duration,
+        "date": month,
     }
 
 
