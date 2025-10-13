@@ -33,9 +33,9 @@ st.sidebar.markdown(
 st.sidebar.markdown("---")
 
 st.sidebar.subheader("🧭 Navigation")
-st.sidebar.page_link("app/Home.py", label="🏠 Home")
-st.sidebar.page_link("app/pages/1_Travel_Results.py", label="📍 Travel Results")
-st.sidebar.page_link("app/pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+st.sidebar.page_link("Home.py", label="🏠 Home")
+st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
+st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
 
 st.sidebar.markdown("---")
 st.sidebar.caption("Developed by Ramana G. | Atlantis University | © 2025")
