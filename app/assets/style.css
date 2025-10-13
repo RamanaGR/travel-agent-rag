@@ -1,78 +1,67 @@
-
-/* ===== Global Page Background ===== */
+/* ===== Global App Background ===== */
 [data-testid="stAppViewContainer"] {
-    background-image: url("app/assets/bg-image.png");
+    background: url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e") no-repeat center center fixed;
     background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-     background-color: #b0d0ca;
 }
 
-/* Make main content semi-transparent for readability */
+/* Transparent overlay for content readability */
 [data-testid="stAppViewContainer"] > div:first-child {
-    background-color: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(5px);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
     border-radius: 12px;
-    padding: 1rem;
+    padding: 2rem;
 }
 
-/* Adjust sidebar transparency to blend with background */
+/* ===== Sidebar Styling ===== */
 [data-testid="stSidebar"] {
-    background-color: rgba(0, 119, 182, 0.9);
-}
-
-
-/* General font and background setup */
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f8fafc;
-}
-
-/* Sidebar design */
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0077b6 0%, #0096c7 100%);
-    color: white;
+    background: rgba(0, 63, 114, 0.92);
+    color: #ffffff;
+    backdrop-filter: blur(6px);
+    border-right: 2px solid rgba(255, 255, 255, 0.15);
+    padding-top: 1.5rem;
 }
 
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
 [data-testid="stSidebar"] p {
-    color: white;
+    color: #ffffff;
 }
 
 [data-testid="stSidebar"] img {
-    border-radius: 12px;
-    margin-bottom: 15px;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* Buttons */
+/* ===== Buttons ===== */
 div.stButton > button {
-    background-color: #00b4d8;
+    background-color: #0078D7;
     color: white;
     font-weight: 600;
-    border-radius: 10px;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
     border: none;
-    padding: 10px 20px;
+    transition: background-color 0.3s ease;
 }
 
 div.stButton > button:hover {
-    background-color: #0077b6;
-    transition: 0.3s ease;
+    background-color: #005fa3;
 }
 
-/* Headings */
-h1, h2, h3 {
-    color: #023e8a;
+/* ===== Headers and Typography ===== */
+h1, h2, h3, h4 {
+    color: #003366;
+    font-family: 'Poppins', sans-serif;
     font-weight: 700;
 }
 
-/* Section separators */
-hr {
-    border: 1px solid #90e0ef;
+p, li, span {
+    font-family: 'Open Sans', sans-serif;
+    color: #1e1e1e;
 }
 
-/* Styled card container */
+/* ===== Cards / Sections ===== */
 .card {
     background-color: #ffffff;
     padding: 20px;
@@ -81,49 +70,7 @@ hr {
     margin-bottom: 20px;
 }
 
-/* 🌍 Background image setup */
-.stApp {
-    background: url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e") no-repeat center center fixed;
-    background-size: cover;
-}
-
-/* ✈️ Sidebar styling */
-section[data-testid="stSidebar"] {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(6px);
-    border-right: 2px solid rgba(255, 255, 255, 0.3);
-    padding-top: 1rem;
-}
-
-/* 🌤️ Text & typography */
-h1, h2, h3, h4 {
-    color: #003366 !important;
-    font-family: 'Poppins', sans-serif !important;
-}
-
-p, li, span {
-    font-family: 'Open Sans', sans-serif !important;
-}
-
-/* 🌈 Buttons */
-.stButton button {
-    background-color: #0078D7;
-    color: white;
-    border-radius: 10px;
-    padding: 0.5rem 1rem;
-    font-weight: 600;
-}
-
-.stButton button:hover {
-    background-color: #005fa3;
-}
-
-/* 🚫 Hide default header bar
-header[data-testid="stHeader"] {
-    display: none;
-}*/
-
-/* ✨ Scrollbar style */
+/* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -132,3 +79,10 @@ header[data-testid="stHeader"] {
     border-radius: 10px;
 }
 
+/* ===== Hide Default Streamlit Header and Footer ===== */
+header[data-testid="stHeader"] {
+    display: none;
+}
+footer {
+    visibility: hidden;
+}
