@@ -25,6 +25,12 @@ st.set_page_config(
 )
 
 
+st.sidebar.subheader("🧭 Navigation")
+st.sidebar.page_link("Home.py", label="🏠 Home")
+st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
+st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+
+st.sidebar.markdown("---")
 # --- Sidebar Branding ---
 st.sidebar.image("app/assets/img.png", use_container_width=True)
 st.sidebar.markdown("<h2 style='color:white;'>✈️ AI Travel Planner</h2>", unsafe_allow_html=True)
@@ -34,12 +40,6 @@ st.sidebar.markdown(
 )
 st.sidebar.markdown("---")
 
-st.sidebar.subheader("🧭 Navigation")
-st.sidebar.page_link("Home.py", label="🏠 Home")
-st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
-st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
-
-st.sidebar.markdown("---")
 st.sidebar.caption("Developed by Ramana G. | Atlantis University | © 2025")
 
 
