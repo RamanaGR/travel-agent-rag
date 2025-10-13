@@ -1,0 +1,14 @@
+.stApp {
+        background-image: url("/static/img.png");
+        background-size: contain;  /* Changed to contain: Zooms out to show full image */
+        background-position: center;
+        background-attachment: fixed;
+        background-repeat: no-repeat;  /* Prevents tiling if image is small */
+        background-color: #b0d0ca;  /* Fallback black color to hide white space */
+}
+[data-testid="stSidebar"] {
+        background-color: #f0f2f6;  /* Light gray background for sidebar */
+}
+[data-testid="stSidebar"] * {
+    color: #333333;  /* Dark text for readability */
+}

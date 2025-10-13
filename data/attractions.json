@@ -1,0 +1,186 @@
+{
+    "Paris": [
+        {
+            "name": "1. Pont Alexandre III",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Bridges",
+            "rating": 4.6,
+            "reviews": "17,472",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/c2/1c/cf/pont-alexandre-iii.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=265614"
+        },
+        {
+            "name": "2. Le Marais",
+            "description": "N/A",
+            "category": "Neighborhoods",
+            "rating": 4.6,
+            "reviews": "13,016",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/05/21/02/95/le-marais.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=292257"
+        },
+        {
+            "name": "3. Arc de Triomphe",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 Architectural Buildings",
+            "rating": 4.5,
+            "reviews": "46,396",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0e/53/47/52/arc-de-triomphe.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=188709"
+        },
+        {
+            "name": "4. Basilique du Sacre-Coeur de Montmartre",
+            "description": "N/A",
+            "category": "Churches & Cathedrals",
+            "rating": 4.5,
+            "reviews": "39,655",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/06/83/34/41/basilica-del-sagrado.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=190685"
+        },
+        {
+            "name": "5. Montmartre",
+            "description": "N/A",
+            "category": "Neighborhoods \u2022 Historic Walking Areas",
+            "rating": 4.5,
+            "reviews": "20,506",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/0c/65/6e/caption.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=189284"
+        },
+        {
+            "name": "6. Cath\u00e9drale Notre-Dame de Paris",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 Architectural Buildings",
+            "rating": 4.6,
+            "reviews": "72,132",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0d/8d/a4/84/the-amazingly-detailed.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=188679"
+        },
+        {
+            "name": "7. Eiffel Tower",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Observation Decks & Towers",
+            "rating": 4.6,
+            "reviews": "143,652",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/9e/7f/9d/eiffeltoren.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=188151"
+        },
+        {
+            "name": "8. Palais Garnier",
+            "description": "N/A",
+            "category": "Architectural Buildings \u2022 Theaters",
+            "rating": 4.7,
+            "reviews": "20,167",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/50/c6/dd/palais-garnier.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=190204"
+        },
+        {
+            "name": "9. Champs-Elysees",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Historic Walking Areas",
+            "rating": 4.2,
+            "reviews": "21,746",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2a/b0/d1/f8/the-champs-elysees-in.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=209760"
+        },
+        {
+            "name": "10. Louvre Museum",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Architectural Buildings",
+            "rating": 4.6,
+            "reviews": "104,120",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/30/df/da/34/the-glass-pyramid-is.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=188757"
+        }
+    ],
+    "Miami": [
+        {
+            "name": "1. Bayside Marketplace",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Shopping Malls",
+            "rating": 4.1,
+            "reviews": "13,945",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/13/46/32/80/waterside.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=143763"
+        },
+        {
+            "name": "2. Black Police Precinct and Courthouse Museum",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 History Museums",
+            "rating": 5.0,
+            "reviews": "319",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/29/a9/e2/c4/black-police-precinct.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=7812544"
+        },
+        {
+            "name": "3. Wynwood",
+            "description": "N/A",
+            "category": "Neighborhoods",
+            "rating": 4.5,
+            "reviews": "2,178",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/41/53/ea/artists-frequently-create.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=288502"
+        },
+        {
+            "name": "4. Wynwood Walls",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Art Museums",
+            "rating": 4.6,
+            "reviews": "9,513",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/cd/05/41/20190602-125404-largejpg.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=6373552"
+        },
+        {
+            "name": "5. Kaseya Center",
+            "description": "N/A",
+            "category": "Arenas & Stadiums",
+            "rating": 4.6,
+            "reviews": "5,744",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/05/ae/5d/5b/aa.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=147158"
+        },
+        {
+            "name": "6. Miami Design District",
+            "description": "N/A",
+            "category": "Art Galleries \u2022 Neighborhoods",
+            "rating": 4.3,
+            "reviews": "1,494",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0a/4e/88/99/louis-vuitton-at-night.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=267232"
+        },
+        {
+            "name": "7. LoanDepot Park",
+            "description": "N/A",
+            "category": "Arenas & Stadiums",
+            "rating": 4.4,
+            "reviews": "2,005",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/25/50/8f/cf/loandepot-park-features.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=2651111"
+        },
+        {
+            "name": "8. Coconut Grove",
+            "description": "N/A",
+            "category": "Neighborhoods",
+            "rating": 4.2,
+            "reviews": "872",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0b/63/06/9a/view-from-the-sonesta.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=4544507"
+        },
+        {
+            "name": "9. Deering Estate",
+            "description": "N/A",
+            "category": "Speciality Museums \u2022 Historic Sites",
+            "rating": 4.3,
+            "reviews": "388",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/06/5e/62/df/deering-estate-at-cutler.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=298695"
+        },
+        {
+            "name": "10. Little Havana",
+            "description": "N/A",
+            "category": "Neighborhoods",
+            "rating": 3.8,
+            "reviews": "3,037",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1c/98/04/f5/divertente-e-gioiosa.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=107606"
+        }
+    ]
+}

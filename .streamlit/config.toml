@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#2563EB"             # Blue accent
+backgroundColor = "#F8FAFC"          # Soft white
+secondaryBackgroundColor = "#FFFFFF" # Card background
+textColor = "#1E293B"
+font = "sans serif"
