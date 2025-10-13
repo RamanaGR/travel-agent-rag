@@ -6,8 +6,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from modules.attractions_api import fetch_attractions
 from modules.weather_api import get_weather
 from modules.rag_engine import search_attractions
-current_dir = os.path.dirname(os.path.abspath(__file__))  # Gets /app/ dir
-css_path = os.path.join(current_dir, 'assets', 'style.css')  # Builds full path
+#current_dir = os.path.dirname(os.path.abspath(__file__))  # Gets /app/ dir
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+css_path = os.path.join(project_root, 'app', 'assets', 'style.css')
+#css_path = os.path.join(current_dir, 'assets', 'style.css')  # Builds full path
 
 # Load and inject CSS
 with open(css_path, 'r') as f:
