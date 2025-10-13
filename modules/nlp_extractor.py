@@ -50,6 +50,7 @@ def extract_entities(user_input):
 
     # 3️⃣ Duration (e.g., 4-day, 5 nights)
     duration_match = re.search(r"(\d+)\s*[- ]?(day|days|night|nights)", user_input, re.IGNORECASE)
+    print("duration match ",duration_match)
     if duration_match:
         duration = int(duration_match.group(1))
 
@@ -58,6 +59,7 @@ def extract_entities(user_input):
         r"(January|February|March|April|May|June|July|August|September|October|November|December|next month|this month)",
         user_input, re.IGNORECASE
     )
+    print(month_match)
     if month_match:
         month_raw = month_match.group(1).lower()
         if "next" in month_raw:
@@ -71,7 +73,8 @@ def extract_entities(user_input):
         # Default fallback
         next_month = (datetime.now().month % 12) + 1
         month = datetime(datetime.now().year, next_month, 1).strftime("%B %Y")
-
+    print("Month ", month)
+    print("Duration ", duration)
     return {
         "destination": destination,
         "budget": budget,

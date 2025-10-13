@@ -59,6 +59,7 @@ if generate:
     else:
         with st.spinner("Analyzing your request..."):
             details = extract_entities(user_query)
+            print(details)
             destination = details.get("destination")
             budget = details.get("budget")
             duration = details.get("duration")

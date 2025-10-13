@@ -101,11 +101,3 @@ st.download_button(
     file_name=f"{destination}_itinerary.txt",
     mime="text/plain"
 )
-
-# --- Download option ---
-st.download_button(
-    label="📥 Download Itinerary",
-    data=plan,
-    file_name=f"{destination}_itinerary.txt",
-    mime="text/plain"
-)
