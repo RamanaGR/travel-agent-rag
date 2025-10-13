@@ -1,6 +1,6 @@
 /* ===== Global App Background ===== */
 [data-testid="stAppViewContainer"] {
-    background: url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e") no-repeat center center fixed;
+    background: url("https://i.imgur.com/q270uDx.png") no-repeat center center fixed;
     background-size: cover;
 }
 
@@ -79,10 +79,11 @@ p, li, span {
     border-radius: 10px;
 }
 
-/* ===== Hide Default Streamlit Header and Footer ===== */
+/* ===== Hide Default Streamlit Header and Footer =====
 header[data-testid="stHeader"] {
     display: none;
 }
 footer {
     visibility: hidden;
 }
+*/
