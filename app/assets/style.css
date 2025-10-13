@@ -1,7 +1,7 @@
 
 /* ===== Global Page Background ===== */
 [data-testid="stAppViewContainer"] {
-    background-image: url("app/assets/background.jpg");
+    background-image: url("app/assets/bg-image.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
