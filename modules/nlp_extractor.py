@@ -50,7 +50,7 @@ def extract_entities(user_input):
         budget = int(budget_match.group(1))
 
     # 3️⃣ Detect number of days (e.g., “3-day trip”)
-    duration_match = re.search(r"(\d+)\s*[- ]?\s*(day|days|night|nights)", user_input, re.IGNORECASE)
+    duration_match = re.search(r"(\d+)(?:\s*[- ]?\s*)?(day|days|night|nights)", user_input, re.IGNORECASE)
     if duration_match:
         duration_days = int(duration_match.group(1))
 

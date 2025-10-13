@@ -44,7 +44,7 @@ with st.container():
     st.markdown("### 🌤 Current Weather")
     with st.spinner("Fetching weather..."):
         weather = get_weather(destination)
-        st.markdown(f"**{weather.get('description', 'N/A').title()}**, {weather.get('temperature', 'N/A')}°C")
+        st.markdown(weather)
 
 st.divider()
 
