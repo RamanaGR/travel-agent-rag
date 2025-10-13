@@ -2,7 +2,7 @@ import os
 import sys
 
 import streamlit as st
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from modules.attractions_api import fetch_attractions
 from modules.weather_api import get_weather
 from modules.rag_engine import search_attractions
