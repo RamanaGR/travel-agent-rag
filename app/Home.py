@@ -24,14 +24,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Sidebar branding
+
+# --- Sidebar Branding ---
 st.sidebar.image("app/assets/img.png", use_container_width=True)
-st.sidebar.markdown("### ✈️ AI Travel Planner")
-st.sidebar.write("Personalized itineraries using Generative AI")
+st.sidebar.markdown("<h2 style='color:white;'>✈️ AI Travel Planner</h2>", unsafe_allow_html=True)
 st.sidebar.markdown(
-    f"<style>{css_content}</style>",
+    "<p style='color:#e0fbfc;'>Your smart companion for effortless travel planning</p>",
     unsafe_allow_html=True
 )
+st.sidebar.markdown("---")
+
+st.sidebar.subheader("🧭 Navigation")
+st.sidebar.page_link("app/Home.py", label="🏠 Home")
+st.sidebar.page_link("app/pages/1_Travel_Results.py", label="📍 Travel Results")
+st.sidebar.page_link("app/pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+
+st.sidebar.markdown("---")
+st.sidebar.caption("Developed by Ramana G. | Atlantis University | © 2025")
+
+
 # --- Title ---
 st.title("🌍 Plan Your Next Adventure with AI")
 st.markdown("""
