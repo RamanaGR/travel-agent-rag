@@ -1,14 +1,83 @@
-.stApp {
-        background-image: url("/static/img.png");
-        background-size: contain;  /* Changed to contain: Zooms out to show full image */
-        background-position: center;
-        background-attachment: fixed;
-        background-repeat: no-repeat;  /* Prevents tiling if image is small */
-        background-color: #b0d0ca;  /* Fallback black color to hide white space */
+
+/* ===== Global Page Background ===== */
+[data-testid="stAppViewContainer"] {
+    background-image: url("app/assets/background.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+     background-color: #b0d0ca;
 }
+
+/* Make main content semi-transparent for readability */
+[data-testid="stAppViewContainer"] > div:first-child {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+/* Adjust sidebar transparency to blend with background */
 [data-testid="stSidebar"] {
-        background-color: #f0f2f6;  /* Light gray background for sidebar */
+    background-color: rgba(0, 119, 182, 0.9);
 }
-[data-testid="stSidebar"] * {
-    color: #333333;  /* Dark text for readability */
+
+
+/* General font and background setup */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
 }
+
+/* Sidebar design */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0077b6 0%, #0096c7 100%);
+    color: white;
+}
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] p {
+    color: white;
+}
+
+[data-testid="stSidebar"] img {
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+/* Buttons */
+div.stButton > button {
+    background-color: #00b4d8;
+    color: white;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    padding: 10px 20px;
+}
+
+div.stButton > button:hover {
+    background-color: #0077b6;
+    transition: 0.3s ease;
+}
+
+/* Headings */
+h1, h2, h3 {
+    color: #023e8a;
+    font-weight: 700;
+}
+
+/* Section separators */
+hr {
+    border: 1px solid #90e0ef;
+}
+
+/* Styled card container */
+.card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+

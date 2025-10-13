@@ -23,6 +23,25 @@ st.markdown(
 
 st.set_page_config(page_title="Your Travel Plan", page_icon="🧭", layout="wide")
 
+# --- Sidebar Branding ---
+st.sidebar.image("app/assets/img.png", use_container_width=True)
+st.sidebar.markdown("<h2 style='color:white;'>✈️ AI Travel Planner</h2>", unsafe_allow_html=True)
+st.sidebar.markdown(
+    "<p style='color:#e0fbfc;'>Your smart companion for effortless travel planning</p>",
+    unsafe_allow_html=True
+)
+st.sidebar.markdown("---")
+
+st.sidebar.subheader("🧭 Navigation")
+st.sidebar.page_link("app/Home.py", label="🏠 Home")
+st.sidebar.page_link("app/pages/1_Travel_Results.py", label="📍 Travel Results")
+st.sidebar.page_link("app/pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+
+st.sidebar.markdown("---")
+st.sidebar.caption("Developed by Ramana G. | Atlantis University | © 2025")
+
+
+
 # --- Validate session ---
 if "destination" not in st.session_state:
     st.error("Please go to the Home page first.")
