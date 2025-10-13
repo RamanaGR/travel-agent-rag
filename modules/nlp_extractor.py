@@ -7,9 +7,23 @@ Uses spaCy + regex.
 import re
 import spacy
 from datetime import datetime, timedelta
+import streamlit as st
+from spacy.cli import download
 
-# Load spaCy model
-nlp = spacy.load("en_core_web_sm")
+
+# -----------------------------
+# Load SpaCy model safely
+# -----------------------------
+@st.cache_resource
+def load_spacy_model():
+    """Load or download SpaCy model once per Streamlit session."""
+    try:
+        return spacy.load("en_core_web_sm")
+    except OSError:
+        download("en_core_web_sm")
+        return spacy.load("en_core_web_sm")
+
+nlp = load_spacy_model()
 
 
 def extract_entities(user_input):
