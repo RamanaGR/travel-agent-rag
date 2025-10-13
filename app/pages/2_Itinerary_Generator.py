@@ -7,8 +7,8 @@ from openai import OpenAI
 from modules.rag_engine import search_attractions
 from config.config import OPENAI_API_KEY
 
-current_dir = os.path.dirname(os.path.abspath(__file__))  # Gets /app/ dir
-css_path = os.path.join(current_dir, 'assets', 'style.css')  # Builds full path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+css_path = os.path.join(project_root, 'assets', 'style.css')
 
 # Load and inject CSS
 with open(css_path, 'r') as f:
