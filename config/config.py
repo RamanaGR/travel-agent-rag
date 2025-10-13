@@ -19,9 +19,12 @@ USE_OFFLINE_MODE = True  # ✅ Keep True for Streamlit Cloud
 # -------------------------------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
+# --- COMMON DATA FILES ---
+CACHE_FILE = os.path.join(DATA_DIR, "attractions.json")
+COUNTER_FILE = os.path.join(DATA_DIR, "attractions_counter.txt")
+GEOID_CACHE_FILE = os.path.join(DATA_DIR, "geoids.json")
 
 # Paths used by RAG Engine
-CACHE_FILE = os.path.join(DATA_DIR, "attractions.json")
 FAISS_INDEX_FILE = os.path.join(DATA_DIR, "faiss_index.bin")
 EMBEDDINGS_FILE = os.path.join(DATA_DIR, "attraction_embeddings.npy")
 META_FILE = os.path.join(DATA_DIR, "attraction_meta.json")

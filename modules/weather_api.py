@@ -2,7 +2,7 @@ import json
 import os
 import time
 import requests
-from config.config import OPENWEATHER_API_KEY, OPENWEATHER_ENDPOINT
+from config.config import OPENWEATHER_KEY, OPENWEATHER_ENDPOINT
 
 COUNTER_FILE = "data/api_usage.txt"
 CACHE_FILE = "data/weather_cache.json"
@@ -58,7 +58,7 @@ def get_weather(city: str) -> str:
 
     # 3️⃣ Make API call
     try:
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPENWEATHER_API_KEY}&units=metric"
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPENWEATHER_KEY}&units=metric"
         res = requests.get(url, timeout=5)
         _increment_counter()
 

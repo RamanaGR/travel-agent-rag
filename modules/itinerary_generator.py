@@ -1,5 +1,6 @@
 import re
-#from modules.rag_engine import build_index, search_similar
+from modules.rag_engine import RAGEngine
+
 
 def generate_itinerary(parsed, weather_func, attractions):
     location = parsed.get("location") or "Unknown"
@@ -9,11 +10,11 @@ def generate_itinerary(parsed, weather_func, attractions):
         num_days = int(re.search(r"(\d+)", str(parsed.get("days") or "3")).group(1))
     except Exception:
         num_days = 3
-
+    rag = RAGEngine()
     # Build FAISS index and search
-    index, texts = build_index(attractions)
+    index, texts = rag.build_index(attractions)
     interest_query = f"top tourist attractions in {location}"
-    recs = search_similar(index, texts, interest_query, top_k=3)
+    recs = rag.search(index, texts, interest_query, top_k=3)
 
     plan = []
     for d in range(1, num_days + 1):
