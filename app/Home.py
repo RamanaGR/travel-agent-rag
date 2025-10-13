@@ -3,7 +3,7 @@ import sys
 
 import streamlit as st
 # Add project root to sys.path (go up one directory from app/)
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 from modules.nlp_extractor import extract_entities
 
 current_dir = os.path.dirname(os.path.abspath(__file__))  # Gets /app/ dir
