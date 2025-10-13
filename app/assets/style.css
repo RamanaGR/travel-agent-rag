@@ -118,10 +118,10 @@ p, li, span {
     background-color: #005fa3;
 }
 
-/* 🚫 Hide default header bar */
+/* 🚫 Hide default header bar
 header[data-testid="stHeader"] {
     display: none;
-}
+}*/
 
 /* ✨ Scrollbar style */
 ::-webkit-scrollbar {
