@@ -81,23 +81,54 @@ hr {
     margin-bottom: 20px;
 }
 
-/* 🔒 Hide Streamlit header and footer */
+/* 🌍 Background image setup */
+.stApp {
+    background: url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e") no-repeat center center fixed;
+    background-size: cover;
+}
+
+/* ✈️ Sidebar styling */
+section[data-testid="stSidebar"] {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+    border-right: 2px solid rgba(255, 255, 255, 0.3);
+    padding-top: 1rem;
+}
+
+/* 🌤️ Text & typography */
+h1, h2, h3, h4 {
+    color: #003366 !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+p, li, span {
+    font-family: 'Open Sans', sans-serif !important;
+}
+
+/* 🌈 Buttons */
+.stButton button {
+    background-color: #0078D7;
+    color: white;
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+}
+
+.stButton button:hover {
+    background-color: #005fa3;
+}
+
+/* 🚫 Hide default header bar */
 header[data-testid="stHeader"] {
     display: none;
 }
-footer {
-    visibility: hidden;
+
+/* ✨ Scrollbar style */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: #0078D7;
+    border-radius: 10px;
 }
 
-/* 🎨 Customize Streamlit header bar */
-header[data-testid="stHeader"] {
-    background: linear-gradient(to right, #00416A, #E4E5E6);
-    color: white !important;
-    height: 3rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Optional: hide Streamlit's right-side buttons */
-header [data-testid="baseButton-headerNoPadding"] {
-    visibility: hidden;
-}
