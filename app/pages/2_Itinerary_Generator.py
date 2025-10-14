@@ -77,13 +77,13 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 weather_lookup = {}
 with st.spinner("Step 1/3: Fetching multi-day weather forecast for planning..."):
     # Print the inputs for debugging
-    debug_inputs = f"Inputs:\nCity: {destination}\nStart Date: {start_date_str}\nDuration Days: {duration_days}"
-    st.code(debug_inputs, language='text')
+    # debug_inputs = f"Inputs:\nCity: {destination}\nStart Date: {start_date_str}\nDuration Days: {duration_days}"
+    # st.code(debug_inputs, language='text')
 
     weather_report = get_forecast_summary(destination, start_date_str, duration_days)
 
     # Print the output for debugging
-    st.code(f"Raw Weather Report Output:\n{weather_report}", language='text')
+    # st.code(f"Raw Weather Report Output:\n{weather_report}", language='text')
 
     # Simple lookup for weather in the final download text (see download block at the end)
     for i in range(duration_days):
@@ -236,7 +236,7 @@ for day_index, day_plan in enumerate(day_plans):
     # Title with date and daily spend
     st.subheader(f"{day_plan.get('day_title', f'Day {day_index + 1}')}")
     st.markdown(
-        f"🗓️ **Date:** {day_date_str} | 💰 **Daily Spend:** ${day_plan.get('daily_spend', 0.0):.2f} | 🌤 **Weather:** {weather_info}")
+        f"🗓️ **Date:** {day_date_str} | 💰 **Daily Spend:** ${day_plan.get('daily_spend', 0.0):.2f}") # | 🌤 **Weather:** {weather_info}")
 
     # Display activities in a clean format
     for activity in day_plan.get("activities", []):
