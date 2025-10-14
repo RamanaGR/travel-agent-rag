@@ -57,7 +57,8 @@ def _get_coordinates(city: str):
         return None, None
     except requests.exceptions.RequestException as e:
         return None, None
-
+def get_forecast_summary_v2(city: str, start_date_str: str, duration_days: int) -> str:
+    return "inside weatheapi"
 
 # --- NEW CORE FUNCTION: GET FORECAST SUMMARY ---
 def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> str:
