@@ -5,8 +5,8 @@ import requests
 from datetime import datetime, timedelta, date as date_obj  # ADDED
 from config.config import OPENWEATHER_KEY, OPENWEATHER_ENDPOINT
 
-COUNTER_FILE = "data/api_usage_v2.txt"
-CACHE_FILE = "data/weather_cache_v2.json"
+COUNTER_FILE = "data/api_usage_v3.txt"
+CACHE_FILE = "data/weather_cache_v3.json"
 CACHE_TTL = 3600  # 1 hour
 DAILY_LIMIT = 1000
 
