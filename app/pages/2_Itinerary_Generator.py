@@ -2,7 +2,7 @@ import os
 import re
 import streamlit as st
 import sys
-import json  # <-- Import for JSON parsing
+import json
 from datetime import datetime, timedelta
 
 # Append project root path
@@ -40,7 +40,6 @@ date = st.session_state["date"]
 # Calculate integer duration for API call and LLM prompt
 duration_days = 3  # Default value
 try:
-    # Robust way to extract the number from a string like "4 days"
     duration_days = int(str(duration).split()[0])
 except (ValueError, IndexError, AttributeError):
     pass
@@ -49,7 +48,6 @@ except (ValueError, IndexError, AttributeError):
 travel_date_raw = date
 start_date_str = None
 try:
-    # Attempt to parse as 'Month YYYY'
     dt_obj = datetime.strptime(str(travel_date_raw), '%B %Y')
     start_date_str = dt_obj.strftime('%Y-%m-01')
     if start_date_str != str(travel_date_raw):
@@ -57,10 +55,8 @@ try:
 except Exception:
     start_date_str = str(travel_date_raw)
     try:
-        # Check if it's already in YYYY-MM-DD format
         datetime.strptime(start_date_str, '%Y-%m-%d')
     except Exception:
-        # Final fallback: use tomorrow's date
         today = datetime.now().date()
         start_date_str = (today + timedelta(days=1)).strftime('%Y-%m-%d')
         st.warning(
@@ -72,7 +68,6 @@ st.divider()
 
 # --- Retrieve context data ---
 with st.spinner("Gathering top attractions..."):
-    # Ensure correct signature is used: search_attractions(query, destination_city, top_k)
     top_places = search_attractions(f"Best attractions in {destination}", destination, top_k=6)
     place_names = [p.get("name", "Unknown") for p in top_places]
     summary = ", ".join(place_names)
@@ -86,7 +81,29 @@ with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning...")
     else:
         st.success("✅ Multi-day weather forecast secured for constraint validation.")
 
-# --- Compose the LLM prompt (FIX: JSON Schema Instruction) ---
+
+# --- NEW: Helper function to parse the multi-day weather string ---
+def parse_weather_summary(weather_report):
+    """Parses the multi-line weather report string into a dictionary {day_num: summary_text}."""
+    daily_data = {}
+    # Regex to capture Day N and the full summary after the date/time
+    # The summary includes everything after the second colon
+    pattern = r"Day\s*(\d+)\s*\((.*?)\):\s*(.*)"
+
+    # Strip the heavy rain/snow warning markers for a cleaner display
+    cleaned_report = weather_report.replace('** (HEAVY RAIN/SNOW WARNING - Plan INDOOR/COVERED activities)**', '')
+
+    for match in re.finditer(pattern, cleaned_report):
+        day_num = int(match.group(1))
+        # Keep only the conditions/temp part
+        summary_text = match.group(3).strip()
+        daily_data[day_num] = summary_text
+    return daily_data
+
+
+weather_lookup = parse_weather_summary(weather_report)
+
+# --- Compose the LLM prompt (JSON Schema Instruction) ---
 json_schema = {
     "type": "object",
     "properties": {
@@ -103,9 +120,10 @@ json_schema = {
                             "type": "object",
                             "properties": {
                                 "time_slot": {"type": "string", "enum": ["Morning", "Afternoon", "Evening"]},
-                                "activity": {"type": "string", "description": "Name of the activity."},
+                                "activity": {"type": "string",
+                                             "description": "Name of the activity. Do NOT include asterisks."},
                                 "details": {"type": "string",
-                                            "description": "Brief description of activity, dinner, and weather considerations."},
+                                            "description": "Brief description of activity, dinner, and weather considerations. Do NOT include asterisks."},
                                 "cost": {"type": "number", "description": "Estimated cost for this activity/meal."}
                             },
                             "required": ["time_slot", "activity", "details", "cost"]
@@ -116,7 +134,7 @@ json_schema = {
             }
         },
         "notes": {"type": "string",
-                  "description": "A final summary explaining how the budget and weather constraints were met."}
+                  "description": "A final summary explaining how the budget and weather constraints were met. Do NOT include asterisks."}
     },
     "required": ["itinerary", "notes"]
 }
@@ -140,13 +158,13 @@ You are an expert travel planner agent. Your goal is to create a detailed, const
 {weather_report}
 
 **FORMAT (CRITICAL):**
-You MUST return the itinerary as a single JSON object that conforms exactly to the following structure. Do not include any text outside the JSON block. Ensure all cost fields are simple numbers (no dollar signs or commas).
+You MUST return the itinerary as a single JSON object that conforms exactly to the following structure. Do not include any text outside the JSON block. Ensure all cost fields are simple numbers (no dollar signs or commas). DO NOT use asterisks (*) or any other markdown formatting inside the JSON strings.
 
 **JSON SCHEMA:**
 {json_schema_string}
 """
 
-# --- Call GPT model (FIXED: Simple JSON Request) ---
+# --- Call GPT model (Simple JSON Request) ---
 client = OpenAI(api_key=OPENAI_API_KEY)
 with st.spinner("✈️ Generating itinerary..."):
     itinerary_data = {}
@@ -155,7 +173,7 @@ with st.spinner("✈️ Generating itinerary..."):
             model="gpt-4-turbo",
             messages=[{"role": "system", "content": system_prompt},
                       {"role": "user", "content": "Generate the personalized travel itinerary now."}],
-            # FIX: Use the simple, widely supported JSON response format
+            # Use the simple, widely supported JSON response format
             response_format={"type": "json_object"}
         )
         raw_json_string = response.choices[0].message.content.strip()
@@ -166,34 +184,37 @@ with st.spinner("✈️ Generating itinerary..."):
         st.text(raw_json_string)
         st.stop()
     except Exception as e:
-        # Catch any other API error
         st.error(f"❌ An error occurred during AI generation: {e}")
         st.stop()
 
-# --- Structured Display using JSON Data (NEW UI CODE) ---
+# --- Structured Display using JSON Data (FINAL UI CODE) ---
 
 st.markdown("### 🗓️ Your Smart Itinerary")
 total_trip_spend = 0
 
-# Use columns for a visually appealing, structured display
 day_plans = itinerary_data.get("itinerary", [])
 if not day_plans:
     st.warning("The AI returned no itinerary data.")
     st.stop()
 
-for day_plan in day_plans:
-    day_title = day_plan.get("day_title", "Day N")
+for day_index, day_plan in enumerate(day_plans):
+    day_num = day_index + 1
+    day_title = day_plan.get("day_title", f"Day {day_num}")
     daily_spend = day_plan.get("daily_spend", 0)
     total_trip_spend += daily_spend
 
-    st.markdown(f"#### 🌅 {day_title} (Daily Spend: ${daily_spend:.2f})")
+    # 1. Get and append weather details
+    weather_info = weather_lookup.get(day_num, "Weather details unavailable.")
 
-    # Use a maximum of 3 columns for Morning/Afternoon/Evening
+    # 2. Append weather info and ensure title is clean
+    title_with_weather = f"🌅 {day_title} (Daily Spend: ${daily_spend:.2f}) | **{weather_info}**".replace('*', '')
+
+    st.markdown(f"#### {title_with_weather}")
+
     cols = st.columns(3)
 
     activities = day_plan.get("activities", [])
 
-    # Ensure there are at most 3 activities per day for the column layout
     for i in range(min(3, len(activities))):
         activity = activities[i]
         time_slot = activity.get("time_slot", "Activity")
@@ -204,20 +225,26 @@ for day_plan in day_plans:
         col = cols[i % 3]
 
         icon = ""
+        style_color = "#3498db"  # Default Blue (Morning)
+
         if "Morning" in time_slot:
             icon = "☀️"
+            style_color = "#3498db"
         elif "Afternoon" in time_slot:
             icon = "🌆"
+            style_color = "#f39c12"  # Orange
         elif "Evening" in time_slot:
             icon = "🌙"
+            style_color = "#9b59b6"  # Purple
 
         with col:
+            # 3. Enhance Tile Style
             st.markdown(
-                f"<div style='background-color:#f9fafb;padding:15px;border-radius:10px;min-height:200px;'>"
-                f"<b>{icon} {time_slot}</b><br><br>"
-                f"**{activity_name}**<br>"
-                f"Cost: **${cost:.2f}**<br>"
-                f"<small>{details}</small>"
+                f"<div style='border-left: 5px solid {style_color}; padding: 15px; border-radius: 5px; margin-bottom: 10px; background-color: #fcfcfc; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); min-height: 220px;'>"
+                f"<b><span style='color: {style_color}; font-size: 16px;'>{icon} {time_slot}</span></b><br>"
+                f"<h5 style='margin-top: 5px; margin-bottom: 5px; font-weight: 700;'>{activity_name.replace('*', '')}</h5>"
+                f"Cost: <span style='color: #27ae60; font-weight: bold; font-size: 14px;'>${cost:.2f}</span><br>"
+                f"<small style='color: #555;'>{details.replace('*', '')}</small>"
                 f"</div>",
                 unsafe_allow_html=True,
             )
@@ -225,8 +252,12 @@ for day_plan in day_plans:
 
 # --- Final Summary and Download ---
 st.markdown("### Trip Summary and Notes")
+
+# Ensure total spend is clean
+notes = itinerary_data.get("notes", "No specific notes provided by the AI.").replace('*', '')
+
 st.markdown(f"**Total Trip Spend:** **${total_trip_spend:.2f}** (Budget: ${budget})")
-st.info(itinerary_data.get("notes", "No specific notes provided by the AI."))
+st.info(notes)
 
 st.divider()
 
@@ -243,12 +274,16 @@ st.download_button(
 # Optional: Download as plain text for easy reading
 download_text = f"ITINERARY FOR {destination}\nTotal Budget: ${budget}\nTotal Spend: ${total_trip_spend:.2f}\n\n"
 for day_plan in itinerary_data.get("itinerary", []):
-    download_text += f"--- {day_plan['day_title']} (Total: ${day_plan['daily_spend']:.2f}) ---\n"
+    # Add weather to the text download
+    day_num = day_plans.index(day_plan) + 1
+    weather_info = weather_lookup.get(day_num, "Weather details unavailable.")
+
+    download_text += f"--- {day_plan['day_title']} (Total: ${day_plan['daily_spend']:.2f}) | Weather: {weather_info} ---\n"
     for activity in day_plan.get("activities", []):
         download_text += f"{activity['time_slot']}: {activity['activity']} (Cost: ${activity['cost']:.2f})\n"
         download_text += f"  Details: {activity['details']}\n"
     download_text += "\n"
-download_text += f"\nNOTES:\n{itinerary_data.get('notes', 'N/A')}"
+download_text += f"\nNOTES:\n{notes}"
 
 st.download_button(
     label="📥 Download Itinerary (Text)",
