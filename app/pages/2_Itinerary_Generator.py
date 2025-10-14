@@ -2,7 +2,7 @@ import os
 import re
 import streamlit as st
 import sys
-import json  # <-- NEW: Import for JSON parsing
+import json  # <-- Import for JSON parsing
 from datetime import datetime, timedelta
 
 # Append project root path
@@ -40,14 +40,16 @@ date = st.session_state["date"]
 # Calculate integer duration for API call and LLM prompt
 duration_days = 3  # Default value
 try:
+    # Robust way to extract the number from a string like "4 days"
     duration_days = int(str(duration).split()[0])
 except (ValueError, IndexError, AttributeError):
-    pass  # Use default if parsing fails
+    pass
 
-# --- ROBUST DATE PARSING BLOCK (Needed for API call) ---
+# --- ROBUST DATE PARSING BLOCK ---
 travel_date_raw = date
 start_date_str = None
 try:
+    # Attempt to parse as 'Month YYYY'
     dt_obj = datetime.strptime(str(travel_date_raw), '%B %Y')
     start_date_str = dt_obj.strftime('%Y-%m-01')
     if start_date_str != str(travel_date_raw):
@@ -55,8 +57,10 @@ try:
 except Exception:
     start_date_str = str(travel_date_raw)
     try:
+        # Check if it's already in YYYY-MM-DD format
         datetime.strptime(start_date_str, '%Y-%m-%d')
     except Exception:
+        # Final fallback: use tomorrow's date
         today = datetime.now().date()
         start_date_str = (today + timedelta(days=1)).strftime('%Y-%m-%d')
         st.warning(
@@ -117,6 +121,9 @@ json_schema = {
     "required": ["itinerary", "notes"]
 }
 
+# Convert the schema to a string to place it into the SYSTEM PROMPT
+json_schema_string = json.dumps(json_schema, indent=2)
+
 system_prompt = f"""
 You are an expert travel planner agent. Your goal is to create a detailed, constraint-aware, multi-day itinerary.
 
@@ -133,19 +140,23 @@ You are an expert travel planner agent. Your goal is to create a detailed, const
 {weather_report}
 
 **FORMAT (CRITICAL):**
-You MUST return the itinerary as a single JSON object that conforms exactly to the provided JSON schema. Do not include any text outside the JSON block. Ensure all cost fields are simple numbers (no dollar signs or commas).
+You MUST return the itinerary as a single JSON object that conforms exactly to the following structure. Do not include any text outside the JSON block. Ensure all cost fields are simple numbers (no dollar signs or commas).
+
+**JSON SCHEMA:**
+{json_schema_string}
 """
 
-# --- Call GPT model (NEW: Request JSON Output) ---
+# --- Call GPT model (FIXED: Simple JSON Request) ---
 client = OpenAI(api_key=OPENAI_API_KEY)
 with st.spinner("✈️ Generating itinerary..."):
+    itinerary_data = {}
     try:
         response = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[{"role": "system", "content": system_prompt},
                       {"role": "user", "content": "Generate the personalized travel itinerary now."}],
-            # FIX: Force JSON output
-            response_format={"type": "json_object", "schema": json_schema}
+            # FIX: Use the simple, widely supported JSON response format
+            response_format={"type": "json_object"}
         )
         raw_json_string = response.choices[0].message.content.strip()
         itinerary_data = json.loads(raw_json_string)
@@ -155,6 +166,7 @@ with st.spinner("✈️ Generating itinerary..."):
         st.text(raw_json_string)
         st.stop()
     except Exception as e:
+        # Catch any other API error
         st.error(f"❌ An error occurred during AI generation: {e}")
         st.stop()
 
@@ -163,16 +175,27 @@ with st.spinner("✈️ Generating itinerary..."):
 st.markdown("### 🗓️ Your Smart Itinerary")
 total_trip_spend = 0
 
-for day_plan in itinerary_data.get("itinerary", []):
+# Use columns for a visually appealing, structured display
+day_plans = itinerary_data.get("itinerary", [])
+if not day_plans:
+    st.warning("The AI returned no itinerary data.")
+    st.stop()
+
+for day_plan in day_plans:
     day_title = day_plan.get("day_title", "Day N")
     daily_spend = day_plan.get("daily_spend", 0)
     total_trip_spend += daily_spend
 
     st.markdown(f"#### 🌅 {day_title} (Daily Spend: ${daily_spend:.2f})")
 
-    cols = st.columns(3)  # Display Morning/Afternoon/Evening in columns
+    # Use a maximum of 3 columns for Morning/Afternoon/Evening
+    cols = st.columns(3)
 
-    for i, activity in enumerate(day_plan.get("activities", [])):
+    activities = day_plan.get("activities", [])
+
+    # Ensure there are at most 3 activities per day for the column layout
+    for i in range(min(3, len(activities))):
+        activity = activities[i]
         time_slot = activity.get("time_slot", "Activity")
         activity_name = activity.get("activity", "Unknown Activity")
         details = activity.get("details", "")
@@ -198,10 +221,9 @@ for day_plan in itinerary_data.get("itinerary", []):
                 f"</div>",
                 unsafe_allow_html=True,
             )
+    st.markdown("---")
 
 # --- Final Summary and Download ---
-st.divider()
-
 st.markdown("### Trip Summary and Notes")
 st.markdown(f"**Total Trip Spend:** **${total_trip_spend:.2f}** (Budget: ${budget})")
 st.info(itinerary_data.get("notes", "No specific notes provided by the AI."))
