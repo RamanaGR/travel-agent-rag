@@ -2,6 +2,7 @@ import os
 import re
 import streamlit as st
 import sys
+import json  # <-- NEW: Import for JSON parsing
 from datetime import datetime, timedelta
 
 # Append project root path
@@ -81,14 +82,48 @@ with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning...")
     else:
         st.success("✅ Multi-day weather forecast secured for constraint validation.")
 
-# --- Compose the LLM prompt (FIX: Simplified, Prescriptive Format) ---
+# --- Compose the LLM prompt (FIX: JSON Schema Instruction) ---
+json_schema = {
+    "type": "object",
+    "properties": {
+        "itinerary": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "day_title": {"type": "string", "description": "e.g., Day 1 (2025-12-01)"},
+                    "daily_spend": {"type": "number", "description": "Total spend for this day."},
+                    "activities": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "time_slot": {"type": "string", "enum": ["Morning", "Afternoon", "Evening"]},
+                                "activity": {"type": "string", "description": "Name of the activity."},
+                                "details": {"type": "string",
+                                            "description": "Brief description of activity, dinner, and weather considerations."},
+                                "cost": {"type": "number", "description": "Estimated cost for this activity/meal."}
+                            },
+                            "required": ["time_slot", "activity", "details", "cost"]
+                        }
+                    }
+                },
+                "required": ["day_title", "daily_spend", "activities"]
+            }
+        },
+        "notes": {"type": "string",
+                  "description": "A final summary explaining how the budget and weather constraints were met."}
+    },
+    "required": ["itinerary", "notes"]
+}
+
 system_prompt = f"""
 You are an expert travel planner agent. Your goal is to create a detailed, constraint-aware, multi-day itinerary.
 
 **STRICT CONSTRAINTS:**
-1. **Budget:** Strictly adhere to the ${budget} limit.
+1. **Budget:** The total trip spend must strictly adhere to the ${budget} limit.
 2. **Duration:** Plan for exactly {duration_days} days.
-3. **Weather-Based Validation (CRITICAL):** Use the provided **Weather Forecast** to actively validate and adjust activity types. Explain how weather dictated activity choices in the narrative.
+3. **Weather-Based Validation (CRITICAL):** Use the provided **Weather Forecast** to actively validate and adjust activity types (e.g., prioritize indoor/covered activities on rainy days).
 
 **DATA:**
 - Destination: {destination}
@@ -98,120 +133,104 @@ You are an expert travel planner agent. Your goal is to create a detailed, const
 {weather_report}
 
 **FORMAT (CRITICAL):**
-The final response **MUST** be structured EXACTLY as follows. Do not include any extra headings, introductory text, or concluding text, except for the required elements.
-
-###
-🌅 Day N (Date)
-☀️ Morning
-- Activity: [Activity Name]
-- Details: [Brief description of activity and weather considerations.]
-- **Cost: $[Numeric Value]**
-🌆 Afternoon
-- Activity: [Activity Name]
-- Details: [Brief description of activity and weather considerations.]
-- **Cost: $[Numeric Value]**
-🌙 Evening
-- Activity: [Activity Name]
-- Details: [Brief description of activity and weather considerations and dinner.]
-- **Cost: $[Numeric Value]**
-**Day's Total Spend: $[Numeric Value]**
-
-Repeat the entire block for each day, separated by '###'. Conclude with a final 'Total Trip Spend' line.
+You MUST return the itinerary as a single JSON object that conforms exactly to the provided JSON schema. Do not include any text outside the JSON block. Ensure all cost fields are simple numbers (no dollar signs or commas).
 """
 
-# --- Call GPT model ---
+# --- Call GPT model (NEW: Request JSON Output) ---
 client = OpenAI(api_key=OPENAI_API_KEY)
 with st.spinner("✈️ Generating itinerary..."):
-    response = client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[{"role": "system", "content": system_prompt},
-                  {"role": "user", "content": "Generate the personalized travel itinerary now."}]
-    )
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4-turbo",
+            messages=[{"role": "system", "content": system_prompt},
+                      {"role": "user", "content": "Generate the personalized travel itinerary now."}],
+            # FIX: Force JSON output
+            response_format={"type": "json_object", "schema": json_schema}
+        )
+        raw_json_string = response.choices[0].message.content.strip()
+        itinerary_data = json.loads(raw_json_string)
+        st.success("✅ Personalized itinerary data received.")
+    except json.JSONDecodeError:
+        st.error("❌ Failed to decode JSON response from AI. Displaying raw text for debugging.")
+        st.text(raw_json_string)
+        st.stop()
+    except Exception as e:
+        st.error(f"❌ An error occurred during AI generation: {e}")
+        st.stop()
 
-raw_plan = response.choices[0].message.content.strip()
+# --- Structured Display using JSON Data (NEW UI CODE) ---
 
-# --- Clean text and structured display (FIX: Hardened Parsing) ---
-# 1. Aggressively clean up common LLM markdown before splitting
-clean_plan = re.sub(r"[*#_`>]+", "", raw_plan).strip()
+st.markdown("### 🗓️ Your Smart Itinerary")
+total_trip_spend = 0
 
-# FIX: Remove extra LLM noise lines before parsing, specifically the "Day Total Cost" line
-clean_plan = re.sub(r'Day\s*\d+\s*Total\s*Cost.*', '', clean_plan, flags=re.IGNORECASE)
-clean_plan = re.sub(r'Total Trip Spend.*', '', clean_plan, flags=re.IGNORECASE)
+for day_plan in itinerary_data.get("itinerary", []):
+    day_title = day_plan.get("day_title", "Day N")
+    daily_spend = day_plan.get("daily_spend", 0)
+    total_trip_spend += daily_spend
 
-# 2. Split by day headings
-# This regex captures the title and the content after it, ignoring the titles themselves in the main split
-day_sections = re.split(r"(\bDay\s*\d+[^\n:]*)", clean_plan, flags=re.IGNORECASE)
+    st.markdown(f"#### 🌅 {day_title} (Daily Spend: ${daily_spend:.2f})")
 
-# The first element is usually empty; we extract titles and content blocks
-day_titles = day_sections[1::2]
-plan_sections = day_sections[2::2]
+    cols = st.columns(3)  # Display Morning/Afternoon/Evening in columns
 
-if not day_titles:
-    st.warning("Could not detect day sections clearly; displaying full text below.")
-    st.markdown(raw_plan.replace("\n", "<br>"), unsafe_allow_html=True)
-else:
-    st.success("✅ Personalized itinerary ready!")
+    for i, activity in enumerate(day_plan.get("activities", [])):
+        time_slot = activity.get("time_slot", "Activity")
+        activity_name = activity.get("activity", "Unknown Activity")
+        details = activity.get("details", "")
+        cost = activity.get("cost", 0)
 
-    st.markdown("### 🗓️ Your Smart Itinerary")
+        col = cols[i % 3]
 
-    for i, section in enumerate(plan_sections):
-        if i >= len(day_titles):
-            break
+        icon = ""
+        if "Morning" in time_slot:
+            icon = "☀️"
+        elif "Afternoon" in time_slot:
+            icon = "🌆"
+        elif "Evening" in time_slot:
+            icon = "🌙"
 
-        title = day_titles[i].strip()
-        # Clean title of emojis and extra space
-        title = re.sub(r'[\s\n\r\t]+', ' ', title).strip()
-        title = re.sub(r'🌅|☀️|🌆|🌙|###', '', title).strip()
-
-        st.markdown(f"#### 🌅 {title}")
-
-        with st.container():
-            # NEW FIX: Aggressive cleaning of stray time labels inside the content before parsing.
-            section_cleaned = re.sub(r'(?:🌅|☀️|🌆|🌙)\s*(Morning|Afternoon|Evening)', '', section, flags=re.IGNORECASE)
-
-            # 3. Use re.findall to reliably extract Time Label and the following Content
-            # Regex: finds (Morning|Afternoon|Evening) followed by any content (.*?)
-            # until the next time block or the end of the section ($)
-            time_blocks = re.findall(
-                r'(Morning|Afternoon|Evening)(.*?)(?=Morning|Afternoon|Evening|$)',
-                section_cleaned,
-                flags=re.IGNORECASE | re.DOTALL
+        with col:
+            st.markdown(
+                f"<div style='background-color:#f9fafb;padding:15px;border-radius:10px;min-height:200px;'>"
+                f"<b>{icon} {time_slot}</b><br><br>"
+                f"**{activity_name}**<br>"
+                f"Cost: **${cost:.2f}**<br>"
+                f"<small>{details}</small>"
+                f"</div>",
+                unsafe_allow_html=True,
             )
 
-            if time_blocks:
-                for time_label, details in time_blocks:
-                    time_label = time_label.capitalize()
+# --- Final Summary and Download ---
+st.divider()
 
-                    # Final cleanup of the details content
-                    details = details.strip()
-                    if details.startswith(':'):
-                        details = details[1:].strip()
-
-                    icon = "☀️" if "Morning" in time_label else ("🌆" if "Afternoon" in time_label else "🌙")
-                    st.markdown(
-                        f"<div style='background-color:#f9fafb;padding:15px;border-radius:10px;margin-bottom:10px;'>"
-                        f"<b>{icon} {time_label}</b><br>{details.replace(chr(10), '<br>')}"
-                        f"</div>",
-                        unsafe_allow_html=True,
-                    )
-            else:
-                st.markdown(f"**Detailed plan content:**<br>{section.replace(chr(10), '<br>')}", unsafe_allow_html=True)
-
-# Combine all plan sections for download
-# Re-extracting the total spend at the very end
-total_spend_match = re.search(r'Total Trip Spend:\s*\$?([\d,]+)', raw_plan, re.IGNORECASE)
-total_spend_line = ""
-if total_spend_match:
-    total_spend_line = f"\n\n**Total Trip Spend: ${total_spend_match.group(1)}**"
-
-final_plan_text = "\n\n".join([day_titles[i] + section for i, section in enumerate(plan_sections)]) + total_spend_line
+st.markdown("### Trip Summary and Notes")
+st.markdown(f"**Total Trip Spend:** **${total_trip_spend:.2f}** (Budget: ${budget})")
+st.info(itinerary_data.get("notes", "No specific notes provided by the AI."))
 
 st.divider()
 
-# --- Download option ---
+# Convert the JSON to a pretty-printed string for download
+download_json = json.dumps(itinerary_data, indent=2)
+
 st.download_button(
-    label="📥 Download Itinerary",
-    data=final_plan_text,
+    label="📥 Download Itinerary (JSON)",
+    data=download_json,
+    file_name=f"{destination}_itinerary.json",
+    mime="application/json"
+)
+
+# Optional: Download as plain text for easy reading
+download_text = f"ITINERARY FOR {destination}\nTotal Budget: ${budget}\nTotal Spend: ${total_trip_spend:.2f}\n\n"
+for day_plan in itinerary_data.get("itinerary", []):
+    download_text += f"--- {day_plan['day_title']} (Total: ${day_plan['daily_spend']:.2f}) ---\n"
+    for activity in day_plan.get("activities", []):
+        download_text += f"{activity['time_slot']}: {activity['activity']} (Cost: ${activity['cost']:.2f})\n"
+        download_text += f"  Details: {activity['details']}\n"
+    download_text += "\n"
+download_text += f"\nNOTES:\n{itinerary_data.get('notes', 'N/A')}"
+
+st.download_button(
+    label="📥 Download Itinerary (Text)",
+    data=download_text,
     file_name=f"{destination}_itinerary.txt",
     mime="text/plain"
 )
