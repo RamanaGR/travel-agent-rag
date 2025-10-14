@@ -85,6 +85,8 @@ else:
             for j in range(1, len(parts), 2):
                 time_label = parts[j].capitalize()
                 details = parts[j + 1].strip()
+                if details.startswith(':'):
+                    details = details[1:].strip()
                 icon = "☀️" if "Morning" in time_label else ("🌆" if "Afternoon" in time_label else "🌙")
                 st.markdown(
                     f"<div style='background-color:#f9fafb;padding:15px;border-radius:10px;margin-bottom:10px;'>"

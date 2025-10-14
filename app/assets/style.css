@@ -12,20 +12,24 @@
     padding: 2rem;
 }
 
-/* ===== Sidebar Styling ===== */
+/* ===== Sidebar Styling (Soft Teal Theme) ===== */
 [data-testid="stSidebar"] {
-    background: rgba(0, 63, 114, 0.92);
-    color: #ffffff;
+    /* Soft, light sea green/teal */
+    background: rgba(200, 230, 220, 0.95);
+    /* Change text color to dark gray for contrast */
+    color: #1e1e1e;
     backdrop-filter: blur(6px);
-    border-right: 2px solid rgba(255, 255, 255, 0.15);
+    border-right: 2px solid rgba(0, 0, 0, 0.1);
     padding-top: 1.5rem;
 }
 
+/* Also update the text colors inside the sidebar */
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3,
 [data-testid="stSidebar"] p {
-    color: #ffffff;
+    /* Changed text from white to dark gray */
+    color: #1e1e1e;
 }
 
 [data-testid="stSidebar"] img {
