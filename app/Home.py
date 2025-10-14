@@ -1,5 +1,7 @@
 import os
 import sys
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
 import streamlit as st
 from datetime import datetime
 from modules.nlp_extractor import extract_entities
