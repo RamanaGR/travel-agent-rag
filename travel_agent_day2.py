@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, date as date_obj
 # --- ⚠️ CONFIGURATION: REPLACE THIS PLACEHOLDER ⚠️ ---
 # You need to manually replace this with your actual OpenWeatherMap API Key
 # In your final project, this should come from config.config
-OPENWEATHER_KEY = "IIIII"
+OPENWEATHER_KEY = "abc"
 
 
 # -----------------------------------------------------
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     print("--- OpenWeatherMap Forecast Summary Test ---")
 
     # ⚠️ IMPORTANT: Choose a date 1-3 days in the future for accurate forecast results.
-    test_city = "New York, US"
+    test_city = "New Delhi"
     # Example: 3 days from the current date (adjust this dynamically for a real test)
     today = date_obj.today()
     test_start_date = (today + timedelta(days=1)).strftime("%Y-%m-%d")

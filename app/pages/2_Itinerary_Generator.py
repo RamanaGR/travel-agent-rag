@@ -75,6 +75,7 @@ with st.spinner("Gathering top attractions..."):
 
 # --- STEP 2: Fetch Forecast for Constraint Validation ---
 with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning..."):
+    st.code(destination,start_date_str,duration_days, language='text')
     weather_report = get_forecast_summary(destination, start_date_str, duration_days)
     st.code(weather_report, language='text')
     if "unavailable" in weather_report or "limit reached" in weather_report:
