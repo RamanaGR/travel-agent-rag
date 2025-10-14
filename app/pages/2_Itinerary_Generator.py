@@ -2,8 +2,8 @@ import os
 import re
 import streamlit as st
 import sys
-# CORRECTED: Added timedelta for date calculations and robustness
 from datetime import datetime, timedelta
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from openai import OpenAI
 from modules.rag_engine import search_attractions
@@ -33,39 +33,32 @@ if "destination" not in st.session_state:
 destination = st.session_state["destination"]
 budget = st.session_state["budget"]
 duration = st.session_state["duration"]
-date = st.session_state["date"] # e.g., 'December 2025'
+date = st.session_state["date"]
 
-# Calculate integer duration for API call and LLM prompt (Robust fix from previous step)
-duration_days = 3 # Default value
+# Calculate integer duration for API call and LLM prompt (Robust fix for AttributeError)
+duration_days = 3  # Default value
 try:
-    # Ensure it's treated as a string before splitting
     duration_days = int(str(duration).split()[0])
 except (ValueError, IndexError, AttributeError):
-    pass # Use default if parsing fails
+    pass  # Use default if parsing fails
 
-# --- NEW ROBUST DATE PARSING BLOCK ---
-# Converts problematic 'Month Year' string (e.g., 'December 2025') into 'YYYY-MM-01'
+# --- ROBUST DATE PARSING BLOCK (Needed for API call) ---
 travel_date_raw = date
 start_date_str = None
 try:
-    # Attempt 1: Parse the month/year string (e.g., 'December 2025')
     dt_obj = datetime.strptime(str(travel_date_raw), '%B %Y')
-    # Use the first day of the month as the starting date, in required format
     start_date_str = dt_obj.strftime('%Y-%m-01')
     if start_date_str != str(travel_date_raw):
-         st.info(f"💡 Travel date inferred from '{travel_date_raw}' to '{start_date_str}'.")
+        st.info(f"💡 Travel date inferred from '{travel_date_raw}' to '{start_date_str}'.")
 except Exception:
-    # Attempt 2: If the format is already correct ('YYYY-MM-DD') or unparsable, use as is
     start_date_str = str(travel_date_raw)
     try:
-        # Validate if the direct string is at least in a valid format
         datetime.strptime(start_date_str, '%Y-%m-%d')
     except Exception:
-        # Fallback 3: If all else fails, default to a safe date (tomorrow)
         today = datetime.now().date()
         start_date_str = (today + timedelta(days=1)).strftime('%Y-%m-%d')
-        st.warning(f"⚠️ Could not parse travel date '{travel_date_raw}'. Defaulting to tomorrow: {start_date_str} for forecast.")
-
+        st.warning(
+            f"⚠️ Could not parse travel date '{travel_date_raw}'. Defaulting to tomorrow: {start_date_str} for forecast.")
 
 st.markdown(f"# 🧳 AI-Generated Itinerary for {destination}")
 st.write(f"💰 Budget: ${budget} | 🕓 Duration: {duration} | 📅 Travel: {date}")
@@ -87,10 +80,7 @@ with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning...")
     else:
         st.success("✅ Multi-day weather forecast secured for constraint validation.")
 
-
 # --- Compose the LLM prompt ---
-# (The system_prompt content remains the same, but you need to wrap the whole thing
-# in the correct variable name and message structure, which was done in the previous step)
 system_prompt = f"""
 You are an expert travel planner agent. Your goal is to create a detailed, constraint-aware, multi-day itinerary.
 
@@ -127,8 +117,15 @@ with st.spinner("✈️ Generating itinerary..."):
 
 raw_plan = response.choices[0].message.content.strip()
 
-# --- Clean text and structured display (Using robust logic from previous fix) ---
-day_sections = re.split(r"(\bDay\s*\d+[^\\n:]*)", raw_plan, flags=re.IGNORECASE)
+# --- Clean text and structured display (CRITICAL FIX: Robust Parsing) ---
+# 1. Aggressively clean up common LLM markdown before splitting
+clean_plan = re.sub(r"[*#_`>]+", "", raw_plan).strip()
+
+# 2. Split by day headings
+# This regex captures the title and the content after it, ignoring the titles themselves in the main split
+day_sections = re.split(r"(\bDay\s*\d+[^\n:]*)", clean_plan, flags=re.IGNORECASE)
+
+# The first element is usually empty; we extract titles and content blocks
 day_titles = day_sections[1::2]
 plan_sections = day_sections[2::2]
 
@@ -145,23 +142,40 @@ else:
             break
 
         title = day_titles[i].strip()
-        # Try to split into Morning / Afternoon / Evening
-        parts = re.split(r"(Morning|Afternoon|Evening)", section, flags=re.IGNORECASE)
+        # Clean title of emojis and extra space
+        title = re.sub(r'[\s\n\r\t]+', ' ', title).strip()
+        title = re.sub(r'🌅|☀️|🌆|🌙', '', title).strip()
+
         st.markdown(f"#### 🌅 {title}")
 
         with st.container():
-            for j in range(1, len(parts), 2):
-                time_label = parts[j].capitalize()
-                details = parts[j + 1].strip()
-                if details.startswith(':'):
-                    details = details[1:].strip()
-                icon = "☀️" if "Morning" in time_label else ("🌆" if "Afternoon" in time_label else "🌙")
-                st.markdown(
-                    f"<div style='background-color:#f9fafb;padding:15px;border-radius:10px;margin-bottom:10px;'>"
-                    f"<b>{icon} {time_label}</b><br>{details.replace(chr(10), '<br>')}"
-                    f"</div>",
-                    unsafe_allow_html=True,
-                )
+            # 3. FIX: Use re.findall to reliably extract Time Label and the following Content
+            # Regex: finds (Morning|Afternoon|Evening) followed by any content (.*?)
+            # until the next time block or the end of the section ($)
+            time_blocks = re.findall(
+                r'(Morning|Afternoon|Evening)(.*?)(?=Morning|Afternoon|Evening|$)',
+                section,
+                flags=re.IGNORECASE | re.DOTALL
+            )
+
+            if time_blocks:
+                for time_label, details in time_blocks:
+                    time_label = time_label.capitalize()
+
+                    # Final cleanup of the details content
+                    details = details.strip()
+                    if details.startswith(':'):
+                        details = details[1:].strip()
+
+                    icon = "☀️" if "Morning" in time_label else ("🌆" if "Afternoon" in time_label else "🌙")
+                    st.markdown(
+                        f"<div style='background-color:#f9fafb;padding:15px;border-radius:10px;margin-bottom:10px;'>"
+                        f"<b>{icon} {time_label}</b><br>{details.replace(chr(10), '<br>')}"
+                        f"</div>",
+                        unsafe_allow_html=True,
+                    )
+            else:
+                st.markdown(f"**Detailed plan content:**<br>{section.replace(chr(10), '<br>')}", unsafe_allow_html=True)
 
 # Combine all plan sections for download
 final_plan_text = "\n\n".join([day_titles[i] + section for i, section in enumerate(plan_sections)])
