@@ -79,7 +79,7 @@ def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> 
     if lat is None or lon is None:
         return "Weather data unavailable: Could not find city coordinates."
 
-    cache = _load_cache()
+    cache = {} #_load_cache()
     cache_key = f"forecast_{city}_{start_date_str}_{duration_days}"
     now = time.time()
 
