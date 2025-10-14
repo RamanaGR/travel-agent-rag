@@ -78,7 +78,8 @@ st.markdown("### 🤖 Smart Recommendations")
 
 query = f"Top attractions for {destination}"
 with st.spinner("Finding AI-curated experiences..."):
-    results = search_attractions(query)
+    # FIX: Pass the destination city to the search function
+    results = search_attractions(query, destination)
 
 for i, res in enumerate(results[:3], start=1):
     st.markdown(f"**{i}. {res.get('name', 'Unknown')}** — {res.get('category', 'N/A')}")

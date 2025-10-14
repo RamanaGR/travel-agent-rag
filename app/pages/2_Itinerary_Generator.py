@@ -66,7 +66,7 @@ st.divider()
 
 # --- Retrieve context data ---
 with st.spinner("Gathering top attractions..."):
-    top_places = search_attractions(f"Best attractions in {destination}", top_k=6)
+    top_places = search_attractions(f"Best attractions in {destination}",destination, top_k=6)
     place_names = [p.get("name", "Unknown") for p in top_places]
     summary = ", ".join(place_names)
     st.success("✅ Attraction data fetched.")
