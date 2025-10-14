@@ -54,27 +54,60 @@ def extract_entities(user_input):
     if duration_match:
         duration = int(duration_match.group(1))
 
-    # 4️⃣ Month or travel period
-    month_match = re.search(
-        r"(January|February|March|April|May|June|July|August|September|October|November|December|next month|this month)",
-        user_input, re.IGNORECASE
-    )
-    print(month_match)
-    if month_match:
-        month_raw = month_match.group(1).lower()
-        if "next" in month_raw:
+    # 4️⃣ Date/Month Extraction (NEW: Specific date first, then month name)
+
+    month = None  # Initialize 'month' which is used for the final return 'date'
+
+    # NEW LOGIC: Check for specific date formats (YYYY-MM-DD, MM/DD/YYYY, etc.)
+    # This regex is flexible with hyphens, slashes, and periods
+    date_regex = r"(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})|(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})"
+    specific_date_match = re.search(date_regex, user_input)
+
+    if specific_date_match:
+        # Get the full matched string (e.g., '2025-02-15' or '02/15/2025')
+        date_str = specific_date_match.group(0)
+
+        # Try to parse the date into a standardized YYYY-MM-DD format
+        try:
+            # Try to parse based on common formats and convert to YYYY-MM-DD
+            # The parsing logic in 2_Itinerary_Generator.py is robust, but a standard format helps
+            if len(date_str.split(date_str[4])) == 3:  # Simple heuristic for YYYY-MM-DD/YYYY format
+                dt_obj = datetime.strptime(date_str, '%Y-%m-%d')
+            else:  # Assume MM/DD/YYYY or similar
+                dt_obj = datetime.strptime(date_str, '%m-%d-%Y')
+
+            # Use the exact date string for the session state.
+            month = dt_obj.strftime('%Y-%m-%d')
+
+        except ValueError:
+            # If parsing fails, fall through to the month-name check below
+            pass
+    if month is None:
+        #Month or travel period
+        month_match = re.search(
+            r"(January|February|March|April|May|June|July|August|September|October|November|December|next month|this month)",
+            user_input, re.IGNORECASE
+        )
+        print(month_match)
+        if month_match:
+            month_raw = month_match.group(1).lower()
+            if "next" in month_raw:
+                next_month = (datetime.now().month % 12) + 1
+                month = datetime(datetime.now().year, next_month, 1).strftime("%B %Y")
+            elif "this" in month_raw:
+                month = datetime.now().strftime("%B %Y")
+            else:
+                month = month_match.group(1).capitalize() + f" {datetime.now().year}"
+        else:
+            # Default fallback
             next_month = (datetime.now().month % 12) + 1
             month = datetime(datetime.now().year, next_month, 1).strftime("%B %Y")
-        elif "this" in month_raw:
-            month = datetime.now().strftime("%B %Y")
-        else:
-            month = month_match.group(1).capitalize() + f" {datetime.now().year}"
     else:
-        # Default fallback
-        next_month = (datetime.now().month % 12) + 1
-        month = datetime(datetime.now().year, next_month, 1).strftime("%B %Y")
-    print("Month ", month)
-    print("Duration ", duration)
+        # Default fallback (original logic)
+        now = datetime.now()
+        next_month = (now.month % 12) + 1
+        year = now.year if next_month > now.month else now.year + 1
+        month = datetime(year, next_month, 1).strftime("%B %Y")
     return {
         "destination": destination,
         "budget": budget,

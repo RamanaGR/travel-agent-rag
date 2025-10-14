@@ -45,7 +45,13 @@ st.divider()
 # --- Input Section ---
 st.markdown("### ✏️ Tell me about your trip")
 user_query = st.text_input(
-    "Example: *Plan a 4-day trip to Miami in December under $1000*"
+    """
+        Provide your travel request in natural language. Try these formats:
+        * **Standard:** `Plan a 4-day trip to Miami in December under $1000.`
+        * **Specific Date:** `I need a 5-night itinerary for Paris starting from 2026-03-20.`
+        * **Minimal:** `New York for a week with a $1500 budget.`
+        * **General:** `Show me things to do in London next month.`
+        """
 )
 
 col1, col2 = st.columns([1, 3])
