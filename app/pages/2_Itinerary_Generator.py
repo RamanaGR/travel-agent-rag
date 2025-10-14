@@ -76,6 +76,7 @@ with st.spinner("Gathering top attractions..."):
 # --- STEP 2: Fetch Forecast for Constraint Validation ---
 with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning..."):
     weather_report = get_forecast_summary(destination, start_date_str, duration_days)
+    st.code(weather_report, language='text')
     if "unavailable" in weather_report or "limit reached" in weather_report:
         st.warning(f"⚠️ Weather constraint validation limited: {weather_report}. Proceeding with best-effort planning.")
     else:
@@ -95,7 +96,6 @@ def parse_weather_summary(weather_report):
     # Strip the heavy rain/snow warning markers for a cleaner display
     cleaned_report = weather_report.replace('** (HEAVY RAIN/SNOW WARNING - Plan INDOOR/COVERED activities)**',
                                             '').replace('Avg Temp', 'Avg Temp')
-    st.write(cleaned_report)
     for match in re.finditer(pattern, cleaned_report):
         day_num = int(match.group(1))
         # Keep only the conditions/temp part, removing any surrounding whitespace
