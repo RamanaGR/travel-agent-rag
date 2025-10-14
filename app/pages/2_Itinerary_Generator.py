@@ -75,9 +75,16 @@ with st.spinner("Gathering top attractions..."):
 
 # --- STEP 2: Fetch Forecast for Constraint Validation ---
 with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning..."):
-    st.code(destination,start_date_str,duration_days, language='text')
+
+    # DEBUG 1: Print the inputs being passed to the weather function
+    debug_inputs = f"Inputs:\nCity: {destination}\nStart Date: {start_date_str}\nDuration Days: {duration_days}"
+    st.code(debug_inputs, language='text')
+
+    # Call the weather API function
     weather_report = get_forecast_summary(destination, start_date_str, duration_days)
-    st.code(weather_report, language='text')
+
+    # DEBUG 2: Print the raw output from the weather function
+    st.code(f"Raw Weather Report Output:\n{weather_report}", language='text')
     if "unavailable" in weather_report or "limit reached" in weather_report:
         st.warning(f"⚠️ Weather constraint validation limited: {weather_report}. Proceeding with best-effort planning.")
     else:
