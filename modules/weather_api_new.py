@@ -76,6 +76,7 @@ def get_forecast_summary_v2(city: str, start_date_str: str, duration_days: int) 
     except Exception as e:
         return f"(Forecast unavailable — {e})"
 
+
 # --- NEW CORE FUNCTION: GET FORECAST SUMMARY ---
 def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> str:
     """
@@ -90,7 +91,6 @@ def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> 
         lat, lon = _get_coordinates(city)
     except Exception as e:
         return f"(coordinates unavailable — {e})"
-
 
     if lat is None or lon is None:
         return "Weather data unavailable: Could not find city coordinates."
@@ -110,13 +110,17 @@ def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> 
         # 5-day / 3-hour forecast endpoint, requires lat/lon for best data
         url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
         res = requests.get(url, timeout=5)
-        #_increment_counter()
+        # _increment_counter()
 
         if res.status_code != 200:
             return f"(Forecast fetch error {res.status_code})"
 
         data = res.json()
-        if not data.get('list'):
+
+        # 🚨 FIX: Explicitly extract the list of forecast items from the 'list' key
+        forecast_items = data.get('list')
+
+        if not forecast_items:
             return "Detailed weather forecast unavailable."
 
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -124,7 +128,9 @@ def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> 
 
         daily_weather = {}
 
-        for item in data['list']:
+        # Iterate over the explicitly extracted list of items
+        for item in forecast_items:
+            # We use item['dt'] (UNIX timestamp) to get the date object
             forecast_dt = datetime.fromtimestamp(item['dt']).date()
 
             if start_date <= forecast_dt <= end_date:
