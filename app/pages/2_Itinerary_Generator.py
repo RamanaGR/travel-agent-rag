@@ -76,9 +76,9 @@ with st.spinner("Gathering top attractions..."):
 # --- STEP 2: Fetch Forecast for Constraint Validation ---
 with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning..."):
 
-    # DEBUG 1: Print the inputs being passed to the weather function
-    debug_inputs = f"Inputs:\nCity: {destination}\nStart Date: {start_date_str}\nDuration Days: {duration_days}"
-    st.code(debug_inputs, language='text')
+    # # DEBUG 1: Print the inputs being passed to the weather function
+    # debug_inputs = f"Inputs:\nCity: {destination}\nStart Date: {start_date_str}\nDuration Days: {duration_days}"
+    # st.code(debug_inputs, language='text')
 
     # Call the weather API function
     weather_report = get_forecast_summary(destination, start_date_str, duration_days)
@@ -113,7 +113,7 @@ def parse_weather_summary(weather_report):
 
 
 weather_lookup = parse_weather_summary(weather_report)
-st.write(weather_lookup)
+# st.write(weather_lookup)
 # --- Compose the LLM prompt (JSON Schema Instruction) ---
 json_schema = {
     "type": "object",
@@ -219,7 +219,7 @@ for day_index, day_plan in enumerate(day_plans):
     weather_info = weather_lookup.get(day_num, "Weather details unavailable.")
 
     # 2. Append weather info and ensure title is clean
-    title_with_weather = f"🌅 {day_title} (Daily Spend: ${daily_spend:.2f}) | **{weather_info}**".replace('*', '')
+    title_with_weather = f"🌅 {day_title} (Daily Spend: ${daily_spend:.2f}) ".replace('*', '')#| **{weather_info}**
 
     st.markdown(f"#### {title_with_weather}")
 
