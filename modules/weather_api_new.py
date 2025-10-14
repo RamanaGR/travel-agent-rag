@@ -58,7 +58,23 @@ def _get_coordinates(city: str):
     except requests.exceptions.RequestException as e:
         return None, None
 def get_forecast_summary_v2(city: str, start_date_str: str, duration_days: int) -> str:
-    return "inside weatheapi"
+    try:
+        lat, lon = _get_coordinates(city)
+        # 5-day / 3-hour forecast endpoint, requires lat/lon for best data
+        url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
+        res = requests.get(url, timeout=5)
+        # _increment_counter()
+
+        if res.status_code != 200:
+            return f"(Forecast fetch error {res.status_code})"
+
+        data = res.json()
+        if not data.get('list'):
+            return "Detailed weather forecast unavailable."
+
+        return data.get('list')
+    except Exception as e:
+        return f"(Forecast unavailable — {e})"
 
 # --- NEW CORE FUNCTION: GET FORECAST SUMMARY ---
 def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> str:
