@@ -3,10 +3,12 @@ import json
 import os
 from datetime import datetime, timedelta, date as date_obj
 
+from modules.weather_api_new import get_forecast_summary
+
 # --- ⚠️ CONFIGURATION: REPLACE THIS PLACEHOLDER ⚠️ ---
 # You need to manually replace this with your actual OpenWeatherMap API Key
 # In your final project, this should come from config.config
-OPENWEATHER_KEY = "lkj"
+OPENWEATHER_KEY = "yyl"
 
 
 # -----------------------------------------------------
@@ -32,7 +34,7 @@ def _get_coordinates(city: str):
 
 
 # --- CORE FUNCTION: GET FORECAST SUMMARY (with robust parsing) ---
-def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> str:
+def get_forecast_summary_v1(city: str, start_date_str: str, duration_days: int) -> str:
     """
     Fetches and summarizes the weather forecast for the trip duration (up to 5 days).
     Uses robust JSON parsing to handle optional 'rain'/'snow' fields.
@@ -123,7 +125,7 @@ if __name__ == "__main__":
     print("--- OpenWeatherMap Forecast Summary Test ---")
 
     # ⚠️ IMPORTANT: Choose a date 1-3 days in the future for accurate forecast results.
-    test_city = "New Delhi"
+    test_city = "Miami"
     # Example: 3 days from the current date (adjust this dynamically for a real test)
     today = date_obj.today()
     test_start_date = (today + timedelta(days=1)).strftime("%Y-%m-%d")
