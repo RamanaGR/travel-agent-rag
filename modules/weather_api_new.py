@@ -82,7 +82,7 @@ def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> 
     cache_key = f"forecast_{city}_{start_date_str}_{duration_days}"
     now = time.time()
 
-    if cache_key in cache and now - cache[cache_key]["timestamp"] < CACHE_TTL:
+    if cache and cache_key in cache and now - cache[cache_key]["timestamp"] < CACHE_TTL:
         return f"(cached forecast) {cache[cache_key]['data']}"
 
     counter = _load_counter()
