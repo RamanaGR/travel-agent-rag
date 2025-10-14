@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from openai import OpenAI
 from modules.rag_engine import search_attractions
 from config.config import OPENAI_API_KEY
-from modules.weather_api_new import get_forecast_summary
+from modules.weather_api_new import get_forecast_summary_v2
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 css_path = os.path.join(project_root, 'assets', 'style.css')
@@ -80,7 +80,7 @@ with st.spinner("Step 1/3: Fetching multi-day weather forecast for planning...")
     debug_inputs = f"Inputs:\nCity: {destination}\nStart Date: {start_date_str}\nDuration Days: {duration_days}"
     st.code(debug_inputs, language='text')
 
-    weather_report = get_forecast_summary(destination, start_date_str, duration_days)
+    weather_report = get_forecast_summary_v2(destination, start_date_str, duration_days)
 
     # Print the output for debugging
     st.code(f"Raw Weather Report Output:\n{weather_report}", language='text')
