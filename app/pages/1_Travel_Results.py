@@ -84,4 +84,4 @@ with st.spinner("Finding AI-curated experiences..."):
 for i, res in enumerate(results[:3], start=1):
     st.markdown(f"**{i}. {res.get('name', 'Unknown')}** — {res.get('category', 'N/A')}")
 
-st.page_link("pages/1_Travel_Results.py", label="🧳 Generate Full Itinerary", icon="✨")
+st.page_link("pages/2_Itinerary_Generator.py", label="🧳 Generate Full Itinerary", icon="✨")

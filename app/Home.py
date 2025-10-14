@@ -158,4 +158,4 @@ if generate:
         st.success(
             f"✅ Destination: **{destination}** | Budget: **${budget}** | Duration: **{duration} days** | Date: **{date}**")
         st.balloons()
-        st.switch_page("pages/2_Itinerary_Generator.py")
+        st.switch_page("pages/1_Travel_Results.py")
