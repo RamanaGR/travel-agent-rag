@@ -56,28 +56,29 @@ st.markdown(
 st.markdown(
     """
     <div style="background-color: #f0f8ff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #007bff;">
-        **1. Standard:**
+        <b>1. Standard:</b>
         <br>
         Plan a <span style="color: #28a745; font-weight: bold;">4-day</span> trip to <span style="color: #6f42c1; font-weight: bold;">Miami</span> in <span style="color: #ffc107; font-weight: bold;">December</span> for <span style="color: #dc3545; font-weight: bold;">under $1000</span>.
     </div>
     <div style="background-color: #fff8f2; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #fd7e14;">
-        **2. Specific Date:**
+        <b>2. Specific Date:</b>
         <br>
         I need a <span style="color: #28a745; font-weight: bold;">5-night</span> itinerary for <span style="color: #6f42c1; font-weight: bold;">Paris</span> starting from <span style="color: #ffc107; font-weight: bold;">2026-03-20</span>.
     </div>
     <div style="background-color: #f2fcf5; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #28a745;">
-        **3. Minimal:**
+        <b>3. Minimal:</b>
         <br>
         <span style="color: #6f42c1; font-weight: bold;">New York</span> for <span style="color: #28a745; font-weight: bold;">a week</span> with a <span style="color: #dc3545; font-weight: bold;">$1500 budget</span>.
     </div>
     <div style="background-color: #f7f0ff; padding: 10px; border-radius: 8px; border-left: 5px solid #6f42c1;">
-        **4. General:**
+        <b>4. General:</b>
         <br>
         Show me things to do in <span style="color: #6f42c1; font-weight: bold;">London</span> <span style="color: #ffc107; font-weight: bold;">next month</span>.
     </div>
     """,
     unsafe_allow_html=True,
 )
+user_query = st.text_input()
 # The st.text_input() for user input follows this block.
 col1, col2 = st.columns([1, 3])
 with col1:
