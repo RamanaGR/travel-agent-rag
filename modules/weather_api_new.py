@@ -95,16 +95,16 @@ def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> 
     if lat is None or lon is None:
         return "Weather data unavailable: Could not find city coordinates."
 
-    # cache = _load_cache()
-    # cache_key = f"forecast_{city}_{start_date_str}_{duration_days}"
-    # now = time.time()
-    #
-    # if cache and cache_key in cache and now - cache[cache_key]["timestamp"] < CACHE_TTL:
-    #     return f"(cached forecast) {cache[cache_key]['data']}"
-    #
-    # counter = _load_counter()
-    # if counter["count"] >= DAILY_LIMIT:
-    #     return "⚠️ Daily API limit reached for forecast."
+    cache = _load_cache()
+    cache_key = f"forecast_{city}_{start_date_str}_{duration_days}"
+    now = time.time()
+
+    if cache and cache_key in cache and now - cache[cache_key]["timestamp"] < CACHE_TTL:
+        return f"(cached forecast) {cache[cache_key]['data']}"
+
+    counter = _load_counter()
+    if counter["count"] >= DAILY_LIMIT:
+        return "⚠️ Daily API limit reached for forecast."
 
     try:
         # 5-day / 3-hour forecast endpoint, requires lat/lon for best data
@@ -166,8 +166,8 @@ def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> 
 
         weather_summary = "\n".join(weather_lines)
 
-        # cache[cache_key] = {"data": weather_summary, "timestamp": now}
-        # _save_cache(cache)
+        cache[cache_key] = {"data": weather_summary, "timestamp": now}
+        _save_cache(cache)
         return weather_summary
 
     except Exception as e:
