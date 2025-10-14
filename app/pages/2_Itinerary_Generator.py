@@ -4,6 +4,7 @@ import streamlit as st
 import sys
 from datetime import datetime, timedelta
 
+# Append project root path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from openai import OpenAI
 from modules.rag_engine import search_attractions
@@ -35,7 +36,7 @@ budget = st.session_state["budget"]
 duration = st.session_state["duration"]
 date = st.session_state["date"]
 
-# Calculate integer duration for API call and LLM prompt (Robust fix for AttributeError)
+# Calculate integer duration for API call and LLM prompt
 duration_days = 3  # Default value
 try:
     duration_days = int(str(duration).split()[0])
@@ -66,31 +67,28 @@ st.divider()
 
 # --- Retrieve context data ---
 with st.spinner("Gathering top attractions..."):
-    top_places = search_attractions(f"Best attractions in {destination}",destination, top_k=6)
+    # Ensure correct signature is used: search_attractions(query, destination_city, top_k)
+    top_places = search_attractions(f"Best attractions in {destination}", destination, top_k=6)
     place_names = [p.get("name", "Unknown") for p in top_places]
     summary = ", ".join(place_names)
     st.success("✅ Attraction data fetched.")
 
-# --- STEP 2: Fetch Forecast for Constraint Validation (NEW RAG Step) ---
+# --- STEP 2: Fetch Forecast for Constraint Validation ---
 with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning..."):
-    # Call the new function with the CORRECTED date format
     weather_report = get_forecast_summary(destination, start_date_str, duration_days)
     if "unavailable" in weather_report or "limit reached" in weather_report:
         st.warning(f"⚠️ Weather constraint validation limited: {weather_report}. Proceeding with best-effort planning.")
     else:
         st.success("✅ Multi-day weather forecast secured for constraint validation.")
 
-# --- Compose the LLM prompt ---
+# --- Compose the LLM prompt (FIX: Simplified, Prescriptive Format) ---
 system_prompt = f"""
 You are an expert travel planner agent. Your goal is to create a detailed, constraint-aware, multi-day itinerary.
 
 **STRICT CONSTRAINTS:**
 1. **Budget:** Strictly adhere to the ${budget} limit.
 2. **Duration:** Plan for exactly {duration_days} days.
-3. **Weather-Based Validation (CRITICAL):** Use the provided **Weather Forecast** to actively validate and adjust activity types for **budget, time, and accessibility**.
-    - If a day includes a **(HEAVY RAIN/SNOW WARNING)**: Favor low-cost, indoor, or covered activities. This ensures budget compliance (no money wasted on unusable outdoor events), saves time (by avoiding transportation delays), and aids accessibility (by avoiding slippery, uneven outdoor paths).
-    - If conditions are clear: Favor outdoor sights and walking tours.
-    - **Ensure your itinerary narrative explains how weather dictated activity choices for specific days.**
+3. **Weather-Based Validation (CRITICAL):** Use the provided **Weather Forecast** to actively validate and adjust activity types. Explain how weather dictated activity choices in the narrative.
 
 **DATA:**
 - Destination: {destination}
@@ -99,11 +97,26 @@ You are an expert travel planner agent. Your goal is to create a detailed, const
 - **Weather Forecast for Trip Period (Use this for validation and planning):**
 {weather_report}
 
-**FORMAT:**
-The final response must be crisp and structured clearly like:
-Day 1 – Morning / Afternoon / Evening.
-Day 2 – Morning / Afternoon / Evening.
-...
+**FORMAT (CRITICAL):**
+The final response **MUST** be structured EXACTLY as follows. Do not include any extra headings, introductory text, or concluding text, except for the required elements.
+
+###
+🌅 Day N (Date)
+☀️ Morning
+- Activity: [Activity Name]
+- Details: [Brief description of activity and weather considerations.]
+- **Cost: $[Numeric Value]**
+🌆 Afternoon
+- Activity: [Activity Name]
+- Details: [Brief description of activity and weather considerations.]
+- **Cost: $[Numeric Value]**
+🌙 Evening
+- Activity: [Activity Name]
+- Details: [Brief description of activity and weather considerations and dinner.]
+- **Cost: $[Numeric Value]**
+**Day's Total Spend: $[Numeric Value]**
+
+Repeat the entire block for each day, separated by '###'. Conclude with a final 'Total Trip Spend' line.
 """
 
 # --- Call GPT model ---
@@ -117,9 +130,13 @@ with st.spinner("✈️ Generating itinerary..."):
 
 raw_plan = response.choices[0].message.content.strip()
 
-# --- Clean text and structured display (CRITICAL FIX: Robust Parsing) ---
+# --- Clean text and structured display (FIX: Hardened Parsing) ---
 # 1. Aggressively clean up common LLM markdown before splitting
 clean_plan = re.sub(r"[*#_`>]+", "", raw_plan).strip()
+
+# FIX: Remove extra LLM noise lines before parsing, specifically the "Day Total Cost" line
+clean_plan = re.sub(r'Day\s*\d+\s*Total\s*Cost.*', '', clean_plan, flags=re.IGNORECASE)
+clean_plan = re.sub(r'Total Trip Spend.*', '', clean_plan, flags=re.IGNORECASE)
 
 # 2. Split by day headings
 # This regex captures the title and the content after it, ignoring the titles themselves in the main split
@@ -144,19 +161,20 @@ else:
         title = day_titles[i].strip()
         # Clean title of emojis and extra space
         title = re.sub(r'[\s\n\r\t]+', ' ', title).strip()
-        title = re.sub(r'🌅|☀️|🌆|🌙', '', title).strip()
+        title = re.sub(r'🌅|☀️|🌆|🌙|###', '', title).strip()
 
         st.markdown(f"#### 🌅 {title}")
 
         with st.container():
-            # NEW FIX: Aggressive cleaning of time labels inside the content before parsing.
-            # This prevents stray emojis/words (like '☀️ Morning') from breaking the regex segmenter.
+            # NEW FIX: Aggressive cleaning of stray time labels inside the content before parsing.
             section_cleaned = re.sub(r'(?:🌅|☀️|🌆|🌙)\s*(Morning|Afternoon|Evening)', '', section, flags=re.IGNORECASE)
 
-            # 3. FIX: Use re.findall to reliably extract Time Label and the following Content
+            # 3. Use re.findall to reliably extract Time Label and the following Content
+            # Regex: finds (Morning|Afternoon|Evening) followed by any content (.*?)
+            # until the next time block or the end of the section ($)
             time_blocks = re.findall(
                 r'(Morning|Afternoon|Evening)(.*?)(?=Morning|Afternoon|Evening|$)',
-                section_cleaned, # Use the cleaned section
+                section_cleaned,
                 flags=re.IGNORECASE | re.DOTALL
             )
 
@@ -178,8 +196,15 @@ else:
                     )
             else:
                 st.markdown(f"**Detailed plan content:**<br>{section.replace(chr(10), '<br>')}", unsafe_allow_html=True)
+
 # Combine all plan sections for download
-final_plan_text = "\n\n".join([day_titles[i] + section for i, section in enumerate(plan_sections)])
+# Re-extracting the total spend at the very end
+total_spend_match = re.search(r'Total Trip Spend:\s*\$?([\d,]+)', raw_plan, re.IGNORECASE)
+total_spend_line = ""
+if total_spend_match:
+    total_spend_line = f"\n\n**Total Trip Spend: ${total_spend_match.group(1)}**"
+
+final_plan_text = "\n\n".join([day_titles[i] + section for i, section in enumerate(plan_sections)]) + total_spend_line
 
 st.divider()
 
