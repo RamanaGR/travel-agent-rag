@@ -78,7 +78,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-user_query = st.text_input()
+user_query = st.text_input("Enter your Plan:")
 # The st.text_input() for user input follows this block.
 col1, col2 = st.columns([1, 3])
 with col1:
