@@ -2,9 +2,12 @@ import os
 import json
 import numpy as np
 
+# Set environment variable to suppress potential MKL warnings/errors
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import faiss
 from openai import OpenAI
+import threading  # <-- New Import
+
 from config.config import (
     OPENAI_API_KEY,
     CACHE_FILE as DATA_FILE,
@@ -17,9 +20,22 @@ from config.config import (
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+# ======================================================================
+# --- Threading State Management ---
+# ======================================================================
+# Global flag to track the RAG build status across threads
+RAG_BUILD_IN_PROGRESS = False
+# Lock to prevent race conditions when checking/setting the flag
+RAG_BUILD_LOCK = threading.Lock()
+
+
+# ======================================================================
+# --- Data Loading and Index Building Functions ---
+# ======================================================================
 
 def load_and_normalize_data(data_file=DATA_FILE):
     """Load attractions.json and normalize all records for embedding."""
+    # ... (Keep your existing implementation of load_and_normalize_data) ...
     print(f"Loading data from {data_file}")
 
     # Ensure 'data' directory exists for config files
@@ -59,7 +75,8 @@ def load_and_normalize_data(data_file=DATA_FILE):
 
 
 def build_embeddings(entries):
-    """Create embeddings for attractions and build FAISS index."""
+    """Create embeddings for attractions and build FAISS index (the SLOW part)."""
+    # ... (Keep your existing implementation of build_embeddings) ...
     if not entries:
         print("🛑 No entries to embed. Skipping index build.")
         return None
@@ -88,7 +105,6 @@ def build_embeddings(entries):
                 embeddings.extend(batch_embeds)
             except Exception as e:
                 print(f"❌ Error during OpenAI embedding: {e}")
-                # Fallback or error handling needed here if API fails entirely
                 return None
 
     embeddings_np = np.array(embeddings).astype("float32")
@@ -98,7 +114,7 @@ def build_embeddings(entries):
     index.add(embeddings_np)
     faiss.write_index(index, INDEX_FILE)
 
-    # FIX: Ensure 'city' is saved in metadata for later filtering
+    # Ensure 'city' is saved in metadata for later filtering
     metadata_to_save = []
     for entry in entries:
         item = entry["meta"]
@@ -112,30 +128,85 @@ def build_embeddings(entries):
     return index
 
 
-# NEW: Helper function to check and build the index
-def _ensure_index_is_built():
-    """Checks if index files exist; if not, loads data and rebuilds them."""
-    if not (os.path.exists(EMBEDDINGS_FILE) and os.path.exists(INDEX_FILE) and os.path.exists(META_FILE)):
-        print("🚨 RAG index files not found or incomplete. Building index...")
-        entries = load_and_normalize_data()
-        if entries:
-            build_embeddings(entries)
-            print("✅ RAG index rebuilt successfully.")
-        else:
-            print("⚠️ Cannot build RAG index: No attraction data found.")
-            raise FileNotFoundError("RAG index data (attractions.json) is missing or empty.")
+# ======================================================================
+# --- THREADED Index Management Functions (The Fix) ---
+# ======================================================================
 
+def _is_index_complete(entries):
+    """Quickly checks if index files exist AND if the data size matches the index size."""
+    if not (os.path.exists(EMBEDDINGS_FILE) and os.path.exists(INDEX_FILE) and os.path.exists(META_FILE)):
+        return False
+
+    try:
+        index = faiss.read_index(INDEX_FILE)
+        # Check if the number of indexed items matches the current number of data entries
+        if index.ntotal == len(entries):
+            return True
+        else:
+            return False
+    except Exception:
+        # If file reading fails, assume corrupted and needs rebuild
+        return False
+
+
+def _run_index_build(entries):
+    """The function executed in the background thread."""
+    global RAG_BUILD_IN_PROGRESS
+    with RAG_BUILD_LOCK:
+        RAG_BUILD_IN_PROGRESS = True
+
+    try:
+        build_embeddings(entries)
+        print("✅ RAG index rebuilt successfully in background.")
+    except Exception as e:
+        print(f"❌ RAG index build failed in background thread: {e}")
+    finally:
+        with RAG_BUILD_LOCK:
+            RAG_BUILD_IN_PROGRESS = False
+
+
+def _ensure_index_is_built():
+    """Manages the index build process, launching it in a thread if needed (FAST call)."""
+    global RAG_BUILD_IN_PROGRESS
+
+    entries = load_and_normalize_data()
+    if not entries:
+        return
+
+        # 1. Quick Check: Is the index already complete?
+    if _is_index_complete(entries):
+        return
+
+    # 2. Check: Is a build already in progress?
+    with RAG_BUILD_LOCK:
+        if RAG_BUILD_IN_PROGRESS:
+            print("⏳ RAG index build already in progress. Skipping launch.")
+            return
+
+    # 3. Launch Build: Index is missing or outdated AND not currently running.
+    print("🚀 Launched RAG index build in a background thread.")
+    thread = threading.Thread(target=_run_index_build, args=(entries,))
+    thread.start()
+
+
+# ======================================================================
+# --- Search Function ---
+# ======================================================================
 
 def search_attractions(query, destination_city, top_k=5):
     """Search cached attractions using semantic similarity, filtering by city."""
 
-    # FIX: Ensure the index is available before attempting to load
-    try:
-        _ensure_index_is_built()
-    except FileNotFoundError:
-        # If the index cannot be built (e.g., no source data), return empty results
+    # 1. Trigger the background check/build (FAST call)
+    _ensure_index_is_built()
+
+    # 2. Check if the index is ready NOW
+    entries = load_and_normalize_data()
+    if not _is_index_complete(entries):
+        # Fallback if the index is being built or is corrupt
+        print("⚠️ RAG Index is not complete or is currently building. Returning empty results.")
         return []
 
+    # 3. Proceed with the search (SLOW operation)
     embeddings_np = np.load(EMBEDDINGS_FILE)
     index = faiss.read_index(INDEX_FILE)
 
@@ -152,11 +223,11 @@ def search_attractions(query, destination_city, top_k=5):
         )
         q_embed = np.array(response.data[0].embedding, dtype="float32").reshape(1, -1)
 
-    # Search a larger number of results (e.g., 5x top_k) to ensure we find enough for the target city
+    # Search a larger set to ensure we find enough for the target city
     search_k = max(top_k * 5, 20)
     distances, indices = index.search(q_embed, search_k)
 
-    # FIX: Filter results by the destination_city
+    # Filter results by the destination_city
     city_filtered_results = []
 
     for i in indices[0]:
@@ -169,7 +240,6 @@ def search_attractions(query, destination_city, top_k=5):
         if len(city_filtered_results) >= top_k:
             break
 
-    # Return the filtered set
     results = city_filtered_results
 
     print(f"🔍 Top {len(results)} results for: '{query}' (Filtered for {destination_city})")
@@ -189,10 +259,11 @@ class RAGEngine:
         return load_and_normalize_data()
 
     def build_index(self, entries):
-        # build_embeddings already has the fix
+        # Note: We now discourage direct calling of this, use search() instead
         return build_embeddings(entries)
 
-    # FIX: Update the search method signature
+        # FIX: Update the search method signature
+
     def search(self, query, destination_city, top_k=5):
         return search_attractions(query, destination_city, top_k)
 
@@ -200,7 +271,10 @@ class RAGEngine:
 if __name__ == "__main__":
     entries = load_and_normalize_data()
     if entries:
+        # Example of manually running the build
         build_embeddings(entries)
+
+        # Example of searching
         results = search_attractions("Top Places to see culture in London", "London")
         for i, r in enumerate(results, 1):
             print(f"{i}. {r['name']} - {r.get('city', 'N/A')} ({r.get('rating', 'N/A')})")

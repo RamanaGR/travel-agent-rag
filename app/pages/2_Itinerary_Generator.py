@@ -149,12 +149,14 @@ else:
         st.markdown(f"#### 🌅 {title}")
 
         with st.container():
+            # NEW FIX: Aggressive cleaning of time labels inside the content before parsing.
+            # This prevents stray emojis/words (like '☀️ Morning') from breaking the regex segmenter.
+            section_cleaned = re.sub(r'(?:🌅|☀️|🌆|🌙)\s*(Morning|Afternoon|Evening)', '', section, flags=re.IGNORECASE)
+
             # 3. FIX: Use re.findall to reliably extract Time Label and the following Content
-            # Regex: finds (Morning|Afternoon|Evening) followed by any content (.*?)
-            # until the next time block or the end of the section ($)
             time_blocks = re.findall(
                 r'(Morning|Afternoon|Evening)(.*?)(?=Morning|Afternoon|Evening|$)',
-                section,
+                section_cleaned, # Use the cleaned section
                 flags=re.IGNORECASE | re.DOTALL
             )
 
@@ -176,7 +178,6 @@ else:
                     )
             else:
                 st.markdown(f"**Detailed plan content:**<br>{section.replace(chr(10), '<br>')}", unsafe_allow_html=True)
-
 # Combine all plan sections for download
 final_plan_text = "\n\n".join([day_titles[i] + section for i, section in enumerate(plan_sections)])
 

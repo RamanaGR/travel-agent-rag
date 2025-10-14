@@ -195,19 +195,15 @@ def fetch_attractions(city: str, limit: int = 10):
         else:
             attractions = attractions[:limit]
 
-        # After attractions fetched: --- Save to Cache and RAG Index---
+        # FIX: Remove the RAG Index Rebuild block to prevent timeouts.
+        # The rag_engine is now 'self-healing' and will rebuild the index
+        # when search_attractions is called if the data is new/missing.
         if city not in open(CACHE_FILE).read():
-            print(f"🆕 New city detected: {city}. Updating data and RAG index...")
-            updated_cache = None
-            with open(CACHE_FILE, "r") as f:
-                updated_cache = json.load(f)
-                updated_cache[city] = attractions
+            print(f"🆕 New city detected: {city}. Caching data.")
+            updated_cache = _load_cache(CACHE_FILE)
+            updated_cache[city] = attractions
             _save_cache(CACHE_FILE, updated_cache)
 
-            # Initialize RAG Engine
-            rag = RAGEngine()
-            entries = rag.load_data()
-            rag.build_index(entries)
         print(f"✅ Fetched and cached {len(attractions)} attractions for {city}")
 
         return attractions
