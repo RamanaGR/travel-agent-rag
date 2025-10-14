@@ -66,6 +66,10 @@ def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> 
     Fetches and summarizes the weather forecast for the trip duration (up to 5 days).
     This function uses the 5-day/3-hour forecast API and aggregates the data daily.
     """
+    # 🚨 CRITICAL: Explicit check for the configuration key 🚨
+    if not OPENWEATHER_KEY:
+        return "Weather data unavailable: OPENWEATHER_KEY is missing or empty in config/config.py"
+    # 🚨 END CRITICAL CHECK 🚨
     try:
         lat, lon = _get_coordinates(city)
     except Exception as e:
