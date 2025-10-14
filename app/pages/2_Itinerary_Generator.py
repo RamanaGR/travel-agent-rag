@@ -27,240 +27,239 @@ st.markdown(
 st.set_page_config(page_title="AI Itinerary Generator", page_icon="🧳", layout="wide")
 st.sidebar.subheader("Navigation")
 st.sidebar.page_link("Home.py", label="🏠 Home")
+st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
+st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+
 # --- Verify context ---
 if "destination" not in st.session_state:
     st.error("Please go to the Home page first.")
     st.stop()
+# REMOVED: Mandatory check and st.stop() for RAG index status
 
 destination = st.session_state["destination"]
 budget = st.session_state["budget"]
 duration = st.session_state["duration"]
 date = st.session_state["date"]
+rag_index_built = st.session_state.get('rag_index_built', False)  # New way to check status
 
 # Calculate integer duration for API call and LLM prompt
 duration_days = 3  # Default value
 try:
-    duration_days = int(str(duration).split()[0])
-except (ValueError, IndexError, AttributeError):
-    pass
+    duration_days = int(duration)
+except ValueError:
+    # If duration is text (e.g., 'a week'), default to 7 days.
+    if isinstance(duration, str) and 'week' in duration.lower():
+        duration_days = 7
+    st.warning(f"Could not parse duration '{duration}'. Defaulting to {duration_days} days.")
 
-# --- ROBUST DATE PARSING BLOCK ---
-travel_date_raw = date
-start_date_str = None
+# Calculate start date for weather API (requires YYYY-MM-DD format for robustness)
+# This logic should be robust enough to handle YYYY-MM-DD or Month YYYY format from nlp_extractor
 try:
-    dt_obj = datetime.strptime(str(travel_date_raw), '%B %Y')
-    start_date_str = dt_obj.strftime('%Y-%m-01')
-    if start_date_str != str(travel_date_raw):
-        st.info(f"💡 Travel date inferred from '{travel_date_raw}' to '{start_date_str}'.")
-except Exception:
-    start_date_str = str(travel_date_raw)
-    try:
-        datetime.strptime(start_date_str, '%Y-%m-%d')
-    except Exception:
-        today = datetime.now().date()
-        start_date_str = (today + timedelta(days=1)).strftime('%Y-%m-%d')
-        st.warning(
-            f"⚠️ Could not parse travel date '{travel_date_raw}'. Defaulting to tomorrow: {start_date_str} for forecast.")
+    if len(date.split('-')) == 3:  # YYYY-MM-DD format
+        start_date = datetime.strptime(date, '%Y-%m-%d').date()
+    else:  # Month YYYY format
+        start_date = datetime.strptime(date, '%B %Y').date()
+    start_date_str = start_date.strftime('%Y-%m-%d')
+except Exception as e:
+    st.error(f"Error parsing date '{date}': {e}. Defaulting to today.")
+    start_date = datetime.now().date()
+    start_date_str = start_date.strftime('%Y-%m-%d')
 
-st.markdown(f"# 🧳 AI-Generated Itinerary for {destination}")
-st.write(f"💰 Budget: ${budget} | 🕓 Duration: {duration} | 📅 Travel: {date}")
+st.title(f"🧳 {duration_days}-Day Itinerary for {destination}")
+st.markdown(f"**Budget:** ${budget} | **Start Date:** {start_date} | **Duration:** {duration_days} Days")
 st.divider()
 
+# Initialize OpenAI client
+client = OpenAI(api_key=OPENAI_API_KEY)
 
+# --------------------------------------------------------------------------
+# --- STEP 1/3: Fetch Forecast for Constraint Validation (MOVED TO TOP) ---
+# --------------------------------------------------------------------------
+weather_lookup = {}
+with st.spinner("Step 1/3: Fetching multi-day weather forecast for planning..."):
+    # Print the inputs for debugging
+    debug_inputs = f"Inputs:\nCity: {destination}\nStart Date: {start_date_str}\nDuration Days: {duration_days}"
+    st.code(debug_inputs, language='text')
 
-# --- STEP 2: Fetch Forecast for Constraint Validation ---
-with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning..."):
-
-    # # DEBUG 1: Print the inputs being passed to the weather function
-    # debug_inputs = f"Inputs:\nCity: {destination}\nStart Date: {start_date_str}\nDuration Days: {duration_days}"
-    # st.code(debug_inputs, language='text')
-
-    # Call the weather API function
     weather_report = get_forecast_summary(destination, start_date_str, duration_days)
 
-    # DEBUG 2: Print the raw output from the weather function
+    # Print the output for debugging
     st.code(f"Raw Weather Report Output:\n{weather_report}", language='text')
-    if "unavailable" in weather_report or "limit reached" in weather_report:
-        st.warning(f"⚠️ Weather constraint validation limited: {weather_report}. Proceeding with best-effort planning.")
+
+    # Simple lookup for weather in the final download text (see download block at the end)
+    for i in range(duration_days):
+        day_tag = f"Day {i + 1}"
+        # Extract the line corresponding to the day for lookup table
+        line = next((line for line in weather_report.split('\n') if line.startswith(day_tag)), None)
+        if line:
+            weather_lookup[i + 1] = line.split(': ')[-1]  # Save the condition summary
+        else:
+            weather_lookup[i + 1] = "Details unavailable."
+
+    if "unavailable" in weather_report or "limit reached" in weather_report or not weather_report:
+        st.warning(
+            f"⚠️ Weather constraint validation limited. Raw report: {weather_report}. Proceeding with best-effort planning.")
+        # If weather fails, clear the report so the LLM doesn't see a confusing empty/error string
+        weather_report = "Weather data is unavailable for constraint validation."
     else:
         st.success("✅ Multi-day weather forecast secured for constraint validation.")
 
+# -------------------------------------------------------------
+# --- STEP 2/3: Retrieve context data (RAG Call) ---
+# -------------------------------------------------------------
+with st.spinner("Step 2/3: Gathering top attractions..."):
+    if not rag_index_built:
+        st.warning("Index not built. Using LLM general knowledge for attractions.")
+        top_places = []
+    else:
+        query = f"Top attractions for {destination} that fit a {budget} budget"
+        top_places = search_attractions(query, destination, top_k=6)
 
-# --- NEW: Helper function to parse the multi-day weather string (THE FIX) ---
-def parse_weather_summary(weather_report):
-    """Parses the multi-line weather report string into a dictionary {day_num: summary_text}."""
-    daily_data = {}
+    if not top_places:
+        summary = "No specific, high-relevance attractions found."
+    else:
+        # Format the top places into a concise string for the LLM
+        attraction_summaries = []
+        for p in top_places:
+            attraction_summaries.append(
+                f"- {p.get('name', 'Unknown')}: {p.get('description', 'No description.')} "
+                f"(Category: {p.get('category', 'N/A')}, Rating: {p.get('rating', 'N/A')})"
+            )
+        summary = "\n".join(attraction_summaries)
 
-    # NEW Regex: Captures "Day N" then skips until "Conditions:" and captures the rest.
-    # Pattern: Captures Day 1, then date, then the rest of the line starting after the colon.
-    # The weather_api_new.py output is: "Day N (YYYY-MM-DD): Avg Temp X°C. Conditions: ...
-    pattern = r"Day\s*(\d+)\s*\((.*?)\):\s*(.*)"
-
-    # Strip the heavy rain/snow warning markers for a cleaner display
-    cleaned_report = weather_report.replace('** (HEAVY RAIN/SNOW WARNING - Plan INDOOR/COVERED activities)**',
-                                            '').replace('Avg Temp', 'Avg Temp')
-    for match in re.finditer(pattern, cleaned_report):
-        day_num = int(match.group(1))
-        # Keep only the conditions/temp part, removing any surrounding whitespace
-        summary_text = match.group(3).strip()
-        daily_data[day_num] = summary_text
-    return daily_data
-
-
-weather_lookup = parse_weather_summary(weather_report)
-
-# --- Retrieve context data ---
-with st.spinner("Gathering top attractions..."):
-    top_places = search_attractions(f"Best attractions in {destination}", destination, top_k=6)
-    place_names = [p.get("name", "Unknown") for p in top_places]
-    summary = ", ".join(place_names)
     st.success("✅ Attraction data fetched.")
 
-# st.write(weather_lookup)
-# --- Compose the LLM prompt (JSON Schema Instruction) ---
-json_schema = {
-    "type": "object",
-    "properties": {
-        "itinerary": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "day_title": {"type": "string", "description": "e.g., Day 1 (2025-12-01)"},
-                    "daily_spend": {"type": "number", "description": "Total spend for this day."},
-                    "activities": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "time_slot": {"type": "string", "enum": ["Morning", "Afternoon", "Evening"]},
-                                "activity": {"type": "string",
-                                             "description": "Name of the activity. Do NOT include asterisks."},
-                                "details": {"type": "string",
-                                            "description": "Brief description of activity, dinner, and weather considerations. Do NOT include asterisks."},
-                                "cost": {"type": "number", "description": "Estimated cost for this activity/meal."}
-                            },
-                            "required": ["time_slot", "activity", "details", "cost"]
-                        }
-                    }
-                },
-                "required": ["day_title", "daily_spend", "activities"]
-            }
-        },
-        "notes": {"type": "string",
-                  "description": "A final summary explaining how the budget and weather constraints were met. Do NOT include asterisks."}
-    },
-    "required": ["itinerary", "notes"]
-}
-
-# Convert the schema to a string to place it into the SYSTEM PROMPT
-json_schema_string = json.dumps(json_schema, indent=2)
-
+# -------------------------------------------------------------
+# --- STEP 3/3: LLM Call to Generate Itinerary ---
+# -------------------------------------------------------------
 system_prompt = f"""
-You are an expert travel planner agent. Your goal is to create a detailed, constraint-aware, multi-day itinerary.
+You are an expert travel agent specializing in creating detailed, day-by-day travel itineraries. 
+Your response MUST be a single, complete JSON object.
 
-**STRICT CONSTRAINTS:**
-1. **Budget:** The total trip spend must strictly adhere to the ${budget} limit.
-2. **Duration:** Plan for exactly {duration_days} days.
-3. **Weather-Based Validation (CRITICAL):** Use the provided **Weather Forecast** to actively validate and adjust activity types (e.g., prioritize indoor/covered activities on rainy days).
+The user's trip details are:
+- DESTINATION: {destination}
+- DURATION: {duration_days} days
+- START DATE: {start_date_str}
+- BUDGET: ${budget}
+- WEATHER FORECAST: {weather_report}
 
-**DATA:**
-- Destination: {destination}
-- Travel Start Date: {start_date_str}
-- Top Attractions (RAG Data): {summary}
-- **Weather Forecast for Trip Period (Use this for validation and planning):**
-{weather_report}
+Your plan MUST strictly adhere to the budget, duration, and weather constraints. Use the provided attraction data for inspiration and context.
 
-**FORMAT (CRITICAL):**
-You MUST return the itinerary as a single JSON object that conforms exactly to the following structure. Do not include any text outside the JSON block. Ensure all cost fields are simple numbers (no dollar signs or commas). DO NOT use asterisks (*) or any other markdown formatting inside the JSON strings.
+**Constraint Adherence Rules:**
+1.  **BUDGET:** The 'total_trip_spend' in the final JSON MUST NOT exceed the user's budget of ${budget}. Ensure daily costs sum up correctly.
+2.  **DURATION:** The 'itinerary' array MUST contain exactly {duration_days} day objects.
+3.  **WEATHER:** Recommend indoor or covered activities for days with rain/snow warnings in the forecast.
 
-**JSON SCHEMA:**
-{json_schema_string}
+**Attraction Context (for inspiration, not exhaustive):**
+{summary}
+
+**JSON Output Format:**
+{{
+  "destination": "{destination}",
+  "duration_days": {duration_days},
+  "budget": {budget},
+  "total_trip_spend": <float: Calculate the total cost of all activities>,
+  "notes": "<string: A summary of the plan, including weather considerations and a quick check on budget adherence>",
+  "itinerary": [
+    {{
+      "day_title": "Day 1: <Descriptive Title>",
+      "daily_spend": <float: Total cost for this day>,
+      "date": "{start_date_str}",
+      "activities": [
+        {{
+          "time_slot": "Morning",
+          "activity": "<Activity Name and brief description>",
+          "cost": <float: Estimated cost of activity>
+        }},
+        {{
+          "time_slot": "Afternoon",
+          "activity": "<Activity Name and brief description>",
+          "cost": <float: Estimated cost of activity>
+        }},
+        {{
+          "time_slot": "Evening",
+          "activity": "<Dinner/Night activity>",
+          "cost": <float: Estimated cost of activity>
+        }}
+      ]
+    }},
+    // ... Repeat for all {duration_days} days ...
+  ]
+}}
 """
-# --- Call GPT model (Simple JSON Request) ---
-client = OpenAI(api_key=OPENAI_API_KEY)
-with st.spinner("✈️ Generating itinerary..."):
-    itinerary_data = {}
-    try:
+
+user_prompt = f"Generate the full {duration_days}-day travel itinerary for {destination}, starting on {start_date_str}, with a budget of ${budget}."
+
+st.markdown("### 🤖 AI Generating Itinerary...")
+placeholder = st.empty()
+
+try:
+    with st.spinner("Step 3/3: Calling LLM to synthesize the plan..."):
         response = client.chat.completions.create(
-            model="gpt-4-turbo",
-            messages=[{"role": "system", "content": system_prompt},
-                      {"role": "user", "content": "Generate the personalized travel itinerary now."}],
-            # Use the simple, widely supported JSON response format
-            response_format={"type": "json_object"}
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.7
         )
-        raw_json_string = response.choices[0].message.content.strip()
-        itinerary_data = json.loads(raw_json_string)
-        st.success("✅ Personalized itinerary data received.")
-    except json.JSONDecodeError:
-        st.error("❌ Failed to decode JSON response from AI. Displaying raw text for debugging.")
-        st.text(raw_json_string)
-        st.stop()
-    except Exception as e:
-        # Catch any other API error
-        st.error(f"❌ An error occurred during AI generation: {e}")
-        st.stop()
 
-# --- Structured Display using JSON Data ---
+    json_text = response.choices[0].message.content
+    itinerary_data = json.loads(json_text)
+    st.success("✅ Itinerary Generated!")
 
-st.markdown("### 🗓️ Your Smart Itinerary")
-total_trip_spend = 0
-
-day_plans = itinerary_data.get("itinerary", [])
-if not day_plans:
-    st.warning("The AI returned no itinerary data.")
+except Exception as e:
+    st.error("An error occurred during AI generation. Please check your API key or try again.")
+    st.exception(e)
     st.stop()
 
+# -------------------------------------------------------------
+# --- Display and Download Output ---
+# -------------------------------------------------------------
+
+# Safety check for total spend and budget
+total_trip_spend = itinerary_data.get("total_trip_spend", 0.0)
+
+# Display the Itinerary
+st.markdown("### 🗺️ Day-by-Day Plan")
+day_plans = itinerary_data.get("itinerary", [])
+current_date = start_date
+
 for day_index, day_plan in enumerate(day_plans):
-    day_num = day_index + 1
-    day_title = day_plan.get("day_title", f"Day {day_num}")
-    daily_spend = day_plan.get("daily_spend", 0)
-    total_trip_spend += daily_spend
+    # Calculate the actual date for display
+    day_date = current_date + timedelta(days=day_index)
+    day_date_str = day_date.strftime('%B %d, %Y')
 
-    # 1. Get and append weather details
-    # FIX: The key for weather_lookup is now the day number (day_num)
-    weather_info = weather_lookup.get(day_num, "Weather details unavailable.")
+    # Get weather for the day for display
+    weather_info = weather_lookup.get(day_index + 1, "Weather unavailable.")
 
-    # 2. Append weather info and ensure title is clean
-    title_with_weather = f"🌅 {day_title} (Daily Spend: ${daily_spend:.2f}) ".replace('*', '')#| **{weather_info}**
+    # Title with date and daily spend
+    st.subheader(f"{day_plan.get('day_title', f'Day {day_index + 1}')}")
+    st.markdown(
+        f"🗓️ **Date:** {day_date_str} | 💰 **Daily Spend:** ${day_plan.get('daily_spend', 0.0):.2f} | 🌤 **Weather:** {weather_info}")
 
-    st.markdown(f"#### {title_with_weather}")
+    # Display activities in a clean format
+    for activity in day_plan.get("activities", []):
+        time_slot = activity.get('time_slot', 'Activity')
+        activity_desc = activity.get('activity', 'No activity details.')
+        cost = activity.get('cost', 0.0)
 
-    activities = day_plan.get("activities", [])
+        icon = "☀️" if "Morning" in time_slot else ("🌆" if "Afternoon" in time_slot else "🌙")
 
-    for activity in activities:
-        time_slot = activity.get("time_slot", "Activity")
-        activity_name = activity.get("activity", "Unknown Activity")
-        details = activity.get("details", "")
-        cost = activity.get("cost", 0)
-
-        icon = ""
-        style_color = "#3498db"  # Default Blue (Morning)
-
-        if "Morning" in time_slot:
-            icon = "☀️"
-            style_color = "#3498db"
-        elif "Afternoon" in time_slot:
-            icon = "🌆"
-            style_color = "#f39c12"  # Orange
-        elif "Evening" in time_slot:
-            icon = "🌙"
-            style_color = "#9b59b6"  # Purple
-
-        # The block now takes up the full container width for even size
         st.markdown(
-            f"<div style='border-left: 5px solid {style_color}; padding: 15px; border-radius: 5px; margin-bottom: 10px; background-color: #fcfcfc; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);'>"
-            f"<b><span style='color: {style_color}; font-size: 16px;'>{icon} {time_slot}</span></b><br>"
-            f"<h5 style='margin-top: 5px; margin-bottom: 5px; font-weight: 700;'>{activity_name.replace('*', '')}</h5>"
-            f"Cost: <span style='color: #27ae60; font-weight: bold; font-size: 14px;'>${cost:.2f}</span><br>"
-            f"<small style='color: #555;'>{details.replace('*', '')}</small>"
-            f"</div>",
+            f"""
+            <div style='background-color:#f9fafb;padding:15px;border-radius:10px;margin-bottom:10px;'>
+                <b>{icon} {time_slot}</b><br>{activity_desc} (Cost: ${cost:.2f})
+            </div>
+            """,
             unsafe_allow_html=True,
         )
+
     st.markdown("---")
 
-# --- Final Summary and Download ---
-st.markdown("### Trip Summary and Notes")
+# --- Summary and Notes ---
+st.markdown("### 📝 Summary and Notes")
 
 # Ensure total spend and notes are clean
 notes = itinerary_data.get("notes", "No specific notes provided by the AI.").replace('*', '')
@@ -287,15 +286,17 @@ for day_plan in itinerary_data.get("itinerary", []):
     day_num = day_plans.index(day_plan) + 1
     weather_info = weather_lookup.get(day_num, "Weather details unavailable.")
 
-    download_text += f"--- {day_plan['day_title']} (Total: ${day_plan['daily_spend']:.2f}) | Weather: {weather_info} ---\n"
+    # Calculate the actual date for download text
+    day_date = start_date + timedelta(days=day_num - 1)
+    day_date_str = day_date.strftime('%B %d, %Y')
+
+    download_text += f"--- {day_plan['day_title']} ({day_date_str}) | Total: ${day_plan['daily_spend']:.2f} | Weather: {weather_info} ---\n"
     for activity in day_plan.get("activities", []):
         download_text += f"{activity['time_slot']}: {activity['activity']} (Cost: ${activity['cost']:.2f})\n"
-        download_text += f"  Details: {activity['details']}\n"
     download_text += "\n"
-download_text += f"\nNOTES:\n{notes}"
 
 st.download_button(
-    label="📥 Download Itinerary (Text)",
+    label="📄 Download Itinerary (Plain Text)",
     data=download_text,
     file_name=f"{destination}_itinerary.txt",
     mime="text/plain"
