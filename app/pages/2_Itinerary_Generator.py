@@ -40,7 +40,6 @@ date = st.session_state["date"]
 # Calculate integer duration for API call and LLM prompt
 duration_days = 3  # Default value
 try:
-    # Robust way to extract the number from a string like "4 days"
     duration_days = int(str(duration).split()[0])
 except (ValueError, IndexError, AttributeError):
     pass
@@ -49,7 +48,6 @@ except (ValueError, IndexError, AttributeError):
 travel_date_raw = date
 start_date_str = None
 try:
-    # Attempt to parse as 'Month YYYY'
     dt_obj = datetime.strptime(str(travel_date_raw), '%B %Y')
     start_date_str = dt_obj.strftime('%Y-%m-01')
     if start_date_str != str(travel_date_raw):
@@ -57,10 +55,8 @@ try:
 except Exception:
     start_date_str = str(travel_date_raw)
     try:
-        # Check if it's already in YYYY-MM-DD format
         datetime.strptime(start_date_str, '%Y-%m-%d')
     except Exception:
-        # Final fallback: use tomorrow's date
         today = datetime.now().date()
         start_date_str = (today + timedelta(days=1)).strftime('%Y-%m-%d')
         st.warning(
@@ -83,29 +79,33 @@ with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning...")
     if "unavailable" in weather_report or "limit reached" in weather_report:
         st.warning(f"⚠️ Weather constraint validation limited: {weather_report}. Proceeding with best-effort planning.")
     else:
-        st.success("✅ Multi-day weather forecast secured for constraint validation.")
+        st.success("✅ Multi-day weather forecast secured for constraint validation.", weather_report)
 
 
-# --- Helper function to parse the multi-day weather string ---
+# --- NEW: Helper function to parse the multi-day weather string (THE FIX) ---
 def parse_weather_summary(weather_report):
     """Parses the multi-line weather report string into a dictionary {day_num: summary_text}."""
     daily_data = {}
-    # Regex to capture Day N and the full summary after the date/time
+
+    # NEW Regex: Captures "Day N" then skips until "Conditions:" and captures the rest.
+    # Pattern: Captures Day 1, then date, then the rest of the line starting after the colon.
+    # The weather_api_new.py output is: "Day N (YYYY-MM-DD): Avg Temp X°C. Conditions: ...
     pattern = r"Day\s*(\d+)\s*\((.*?)\):\s*(.*)"
 
     # Strip the heavy rain/snow warning markers for a cleaner display
-    cleaned_report = weather_report.replace('** (HEAVY RAIN/SNOW WARNING - Plan INDOOR/COVERED activities)**', '')
-
+    cleaned_report = weather_report.replace('** (HEAVY RAIN/SNOW WARNING - Plan INDOOR/COVERED activities)**',
+                                            '').replace('Avg Temp', 'Avg Temp')
+    st.write(cleaned_report)
     for match in re.finditer(pattern, cleaned_report):
         day_num = int(match.group(1))
-        # Keep only the conditions/temp part
+        # Keep only the conditions/temp part, removing any surrounding whitespace
         summary_text = match.group(3).strip()
         daily_data[day_num] = summary_text
     return daily_data
 
 
 weather_lookup = parse_weather_summary(weather_report)
-
+st.write(weather_lookup)
 # --- Compose the LLM prompt (JSON Schema Instruction) ---
 json_schema = {
     "type": "object",
@@ -191,7 +191,7 @@ with st.spinner("✈️ Generating itinerary..."):
         st.error(f"❌ An error occurred during AI generation: {e}")
         st.stop()
 
-# --- Structured Display using JSON Data (FINAL UI CODE) ---
+# --- Structured Display using JSON Data ---
 
 st.markdown("### 🗓️ Your Smart Itinerary")
 total_trip_spend = 0
@@ -208,14 +208,13 @@ for day_index, day_plan in enumerate(day_plans):
     total_trip_spend += daily_spend
 
     # 1. Get and append weather details
+    # FIX: The key for weather_lookup is now the day number (day_num)
     weather_info = weather_lookup.get(day_num, "Weather details unavailable.")
 
     # 2. Append weather info and ensure title is clean
     title_with_weather = f"🌅 {day_title} (Daily Spend: ${daily_spend:.2f}) | **{weather_info}**".replace('*', '')
 
     st.markdown(f"#### {title_with_weather}")
-
-    # FIX: Remove st.columns(3) to keep blocks uniform in size (single column)
 
     activities = day_plan.get("activities", [])
 
@@ -238,7 +237,7 @@ for day_index, day_plan in enumerate(day_plans):
             icon = "🌙"
             style_color = "#9b59b6"  # Purple
 
-        # FIX: The block now takes up the full container width
+        # The block now takes up the full container width for even size
         st.markdown(
             f"<div style='border-left: 5px solid {style_color}; padding: 15px; border-radius: 5px; margin-bottom: 10px; background-color: #fcfcfc; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);'>"
             f"<b><span style='color: {style_color}; font-size: 16px;'>{icon} {time_slot}</span></b><br>"
@@ -253,7 +252,7 @@ for day_index, day_plan in enumerate(day_plans):
 # --- Final Summary and Download ---
 st.markdown("### Trip Summary and Notes")
 
-# Ensure total spend is clean
+# Ensure total spend and notes are clean
 notes = itinerary_data.get("notes", "No specific notes provided by the AI.").replace('*', '')
 
 st.markdown(f"**Total Trip Spend:** **${total_trip_spend:.2f}** (Budget: ${budget})")
