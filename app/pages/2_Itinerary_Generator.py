@@ -34,7 +34,7 @@ duration = st.session_state["duration"]
 date = st.session_state["date"]
 # Calculate integer duration for API call and LLM prompt
 try:
-    duration_days = int(duration.split()[0])
+    duration_days = int(duration)
 except (ValueError, IndexError):
     duration_days = 3 # Default
 st.markdown(f"# 🧳 AI-Generated Itinerary for {destination}")
