@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, date as date_obj
 # --- ⚠️ CONFIGURATION: REPLACE THIS PLACEHOLDER ⚠️ ---
 # You need to manually replace this with your actual OpenWeatherMap API Key
 # In your final project, this should come from config.config
-OPENWEATHER_KEY = "abc"
+OPENWEATHER_KEY = "lkj"
 
 
 # -----------------------------------------------------

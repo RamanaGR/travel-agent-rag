@@ -66,7 +66,11 @@ def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> 
     Fetches and summarizes the weather forecast for the trip duration (up to 5 days).
     This function uses the 5-day/3-hour forecast API and aggregates the data daily.
     """
-    lat, lon = _get_coordinates(city)
+    try:
+        lat, lon = _get_coordinates(city)
+    except Exception as e:
+        return f"(coordinates unavailable — {e})"
+
 
     if lat is None or lon is None:
         return "Weather data unavailable: Could not find city coordinates."
