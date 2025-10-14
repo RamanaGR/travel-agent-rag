@@ -1,10 +1,12 @@
 import os
 import sys
-
 import streamlit as st
+from datetime import datetime
+from modules.nlp_extractor import extract_entities
+from modules.rag_engine import load_and_normalize_data, build_embeddings, INDEX_FILE, META_FILE  # New RAG imports
+
 # Add project root to sys.path (go up one directory from app/)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
-from modules.nlp_extractor import extract_entities
 
 current_dir = os.path.dirname(os.path.abspath(__file__))  # Gets /app/ dir
 css_path = os.path.join(current_dir, 'assets', 'style.css')  # Builds full path
@@ -33,16 +35,60 @@ st.sidebar.page_link("Home.py", label="🏠 Home")
 st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
 st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
 
+# -------------------------------------------------------------
+# --- RAG INDEX SETUP (OPTIONAL) ---
+# -------------------------------------------------------------
+st.sidebar.markdown("---")
+st.sidebar.subheader("⚙️ RAG Index Control")
+
+# Initialize session state for RAG status
+if 'rag_index_built' not in st.session_state:
+    # Check if files already exist on startup (for persistence in Streamlit Cloud)
+    faiss_exists = os.path.exists(INDEX_FILE)
+    meta_exists = os.path.exists(META_FILE)
+    st.session_state.rag_index_built = faiss_exists and meta_exists
+
+
+def build_rag_index_action():
+    """Function to load data and build the FAISS index synchronously."""
+    # Reset status temporarily
+    st.session_state.rag_index_built = False
+
+    try:
+        with st.spinner("Loading attraction data..."):
+            entries = load_and_normalize_data()
+            if not entries:
+                raise ValueError("Attraction data is empty. Cannot build index.")
+
+        with st.spinner("Building vector index (may take 30-60 seconds)..."):
+            # This is the synchronous, heavy lifting call
+            build_embeddings(entries)
+
+        st.session_state.rag_index_built = True
+        st.success("✅ Attraction Index Built Successfully! You can now generate itineraries.")
+
+    except Exception as e:
+        st.session_state.rag_index_built = False
+        st.error(f"❌ Error building RAG index: {e}.")
+        st.exception(e)
+
+
+if st.session_state.rag_index_built:
+    st.sidebar.success("Index Status: Built")
+else:
+    st.sidebar.warning("Index Status: Not Built (Will use general knowledge)")
+
+    # Use the button to trigger the build function
+    if st.sidebar.button("⚙️ Build Attraction Index", type="primary"):
+        build_rag_index_action()
+# -------------------------------------------------------------
+
+
 # --- Title ---
-st.title("🌍 Plan Your Next Adventure with AI")
-st.markdown("""
-#### Your smart travel companion for creating personalized itineraries.
-Just tell me your destination, duration, and budget — I’ll do the rest!
-""")
+st.title("🌍 Plan Your Next Adventure")
+st.caption("Let AI craft your perfect trip based on budget, duration, and even weather constraints.")
 
-st.divider()
-
-# --- Input Section ---
+# --- Examples Section ---
 st.markdown("### 💡 Input Examples:")
 
 st.markdown(
@@ -78,6 +124,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 user_query = st.text_input("Enter your Plan:")
 # The st.text_input() for user input follows this block.
 col1, col2 = st.columns([1, 3])
@@ -89,6 +136,7 @@ with col2:
 if generate:
     if not user_query.strip():
         st.warning("Please enter a travel request first.")
+    # REMOVED: Mandatory check for st.session_state.rag_index_built
     else:
         with st.spinner("Analyzing your request..."):
             details = extract_entities(user_query)
@@ -105,5 +153,7 @@ if generate:
                 "date": date,
             })
 
-        st.success(f"✅ Destination: **{destination}**, Budget: **${budget}**, Duration: **{duration} days**")
-        st.page_link("pages/1_Travel_Results.py", label="➡️ View AI Travel Plan", icon="🧭")
+        st.success(
+            f"✅ Destination: **{destination}** | Budget: **${budget}** | Duration: **{duration} days** | Date: **{date}**")
+        st.balloons()
+        st.switch_page("pages/2_Itinerary_Generator.py")
