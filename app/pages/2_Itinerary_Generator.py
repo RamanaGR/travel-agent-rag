@@ -40,6 +40,7 @@ date = st.session_state["date"]
 # Calculate integer duration for API call and LLM prompt
 duration_days = 3  # Default value
 try:
+    # Robust way to extract the number from a string like "4 days"
     duration_days = int(str(duration).split()[0])
 except (ValueError, IndexError, AttributeError):
     pass
@@ -48,6 +49,7 @@ except (ValueError, IndexError, AttributeError):
 travel_date_raw = date
 start_date_str = None
 try:
+    # Attempt to parse as 'Month YYYY'
     dt_obj = datetime.strptime(str(travel_date_raw), '%B %Y')
     start_date_str = dt_obj.strftime('%Y-%m-01')
     if start_date_str != str(travel_date_raw):
@@ -55,8 +57,10 @@ try:
 except Exception:
     start_date_str = str(travel_date_raw)
     try:
+        # Check if it's already in YYYY-MM-DD format
         datetime.strptime(start_date_str, '%Y-%m-%d')
     except Exception:
+        # Final fallback: use tomorrow's date
         today = datetime.now().date()
         start_date_str = (today + timedelta(days=1)).strftime('%Y-%m-%d')
         st.warning(
@@ -82,12 +86,11 @@ with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning...")
         st.success("✅ Multi-day weather forecast secured for constraint validation.")
 
 
-# --- NEW: Helper function to parse the multi-day weather string ---
+# --- Helper function to parse the multi-day weather string ---
 def parse_weather_summary(weather_report):
     """Parses the multi-line weather report string into a dictionary {day_num: summary_text}."""
     daily_data = {}
     # Regex to capture Day N and the full summary after the date/time
-    # The summary includes everything after the second colon
     pattern = r"Day\s*(\d+)\s*\((.*?)\):\s*(.*)"
 
     # Strip the heavy rain/snow warning markers for a cleaner display
@@ -184,6 +187,7 @@ with st.spinner("✈️ Generating itinerary..."):
         st.text(raw_json_string)
         st.stop()
     except Exception as e:
+        # Catch any other API error
         st.error(f"❌ An error occurred during AI generation: {e}")
         st.stop()
 
@@ -211,18 +215,15 @@ for day_index, day_plan in enumerate(day_plans):
 
     st.markdown(f"#### {title_with_weather}")
 
-    cols = st.columns(3)
+    # FIX: Remove st.columns(3) to keep blocks uniform in size (single column)
 
     activities = day_plan.get("activities", [])
 
-    for i in range(min(3, len(activities))):
-        activity = activities[i]
+    for activity in activities:
         time_slot = activity.get("time_slot", "Activity")
         activity_name = activity.get("activity", "Unknown Activity")
         details = activity.get("details", "")
         cost = activity.get("cost", 0)
-
-        col = cols[i % 3]
 
         icon = ""
         style_color = "#3498db"  # Default Blue (Morning)
@@ -237,17 +238,16 @@ for day_index, day_plan in enumerate(day_plans):
             icon = "🌙"
             style_color = "#9b59b6"  # Purple
 
-        with col:
-            # 3. Enhance Tile Style
-            st.markdown(
-                f"<div style='border-left: 5px solid {style_color}; padding: 15px; border-radius: 5px; margin-bottom: 10px; background-color: #fcfcfc; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); min-height: 220px;'>"
-                f"<b><span style='color: {style_color}; font-size: 16px;'>{icon} {time_slot}</span></b><br>"
-                f"<h5 style='margin-top: 5px; margin-bottom: 5px; font-weight: 700;'>{activity_name.replace('*', '')}</h5>"
-                f"Cost: <span style='color: #27ae60; font-weight: bold; font-size: 14px;'>${cost:.2f}</span><br>"
-                f"<small style='color: #555;'>{details.replace('*', '')}</small>"
-                f"</div>",
-                unsafe_allow_html=True,
-            )
+        # FIX: The block now takes up the full container width
+        st.markdown(
+            f"<div style='border-left: 5px solid {style_color}; padding: 15px; border-radius: 5px; margin-bottom: 10px; background-color: #fcfcfc; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);'>"
+            f"<b><span style='color: {style_color}; font-size: 16px;'>{icon} {time_slot}</span></b><br>"
+            f"<h5 style='margin-top: 5px; margin-bottom: 5px; font-weight: 700;'>{activity_name.replace('*', '')}</h5>"
+            f"Cost: <span style='color: #27ae60; font-weight: bold; font-size: 14px;'>${cost:.2f}</span><br>"
+            f"<small style='color: #555;'>{details.replace('*', '')}</small>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
     st.markdown("---")
 
 # --- Final Summary and Download ---
