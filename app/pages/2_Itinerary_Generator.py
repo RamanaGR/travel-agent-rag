@@ -79,7 +79,7 @@ with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning...")
     if "unavailable" in weather_report or "limit reached" in weather_report:
         st.warning(f"⚠️ Weather constraint validation limited: {weather_report}. Proceeding with best-effort planning.")
     else:
-        st.success("✅ Multi-day weather forecast secured for constraint validation.", weather_report)
+        st.success("✅ Multi-day weather forecast secured for constraint validation.")
 
 
 # --- NEW: Helper function to parse the multi-day weather string (THE FIX) ---
