@@ -174,7 +174,6 @@ You MUST return the itinerary as a single JSON object that conforms exactly to t
 **JSON SCHEMA:**
 {json_schema_string}
 """
-st.code(system_prompt)
 # --- Call GPT model (Simple JSON Request) ---
 client = OpenAI(api_key=OPENAI_API_KEY)
 with st.spinner("✈️ Generating itinerary..."):
