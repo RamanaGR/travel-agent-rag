@@ -66,12 +66,7 @@ st.markdown(f"# 🧳 AI-Generated Itinerary for {destination}")
 st.write(f"💰 Budget: ${budget} | 🕓 Duration: {duration} | 📅 Travel: {date}")
 st.divider()
 
-# --- Retrieve context data ---
-with st.spinner("Gathering top attractions..."):
-    top_places = search_attractions(f"Best attractions in {destination}", destination, top_k=6)
-    place_names = [p.get("name", "Unknown") for p in top_places]
-    summary = ", ".join(place_names)
-    st.success("✅ Attraction data fetched.")
+
 
 # --- STEP 2: Fetch Forecast for Constraint Validation ---
 with st.spinner("Step 2/3: Fetching multi-day weather forecast for planning..."):
@@ -113,6 +108,14 @@ def parse_weather_summary(weather_report):
 
 
 weather_lookup = parse_weather_summary(weather_report)
+
+# --- Retrieve context data ---
+with st.spinner("Gathering top attractions..."):
+    top_places = search_attractions(f"Best attractions in {destination}", destination, top_k=6)
+    place_names = [p.get("name", "Unknown") for p in top_places]
+    summary = ", ".join(place_names)
+    st.success("✅ Attraction data fetched.")
+
 # st.write(weather_lookup)
 # --- Compose the LLM prompt (JSON Schema Instruction) ---
 json_schema = {
