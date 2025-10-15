@@ -5,7 +5,7 @@ import requests
 from datetime import datetime, timedelta, date as date_obj
 import logging  # <-- ADDED: Python logging module
 
-from config.config import OPENWEATHER_KEY, OPENWEATHER_ENDPOINT
+from config.config import OPENWEATHER_KEY, OPENWEATHER_ENDPOINT, OPENWEATHER_ENDPOINT_CORD
 
 # --- CONFIGURING LOGGING FOR THIS MODULE ---
 logger = logging.getLogger(__name__)
@@ -18,9 +18,6 @@ COUNTER_FILE = "data/api_usage_v3.txt"
 CACHE_FILE = "data/weather_cache_v3.json"
 CACHE_TTL = 3600  # 1 hour
 DAILY_LIMIT = 1000
-
-
-# NOTE: Removed hardcoded API key, rely on config.py
 
 # --- Counter and Cache Management Functions (Logging added) ---
 
@@ -79,12 +76,32 @@ def _save_cache(cache):
         logger.error(f"Error saving weather cache: {e}")
 
 
+# --- NEW HELPER FUNCTION TO GET COORDINATES ---
+def _get_coordinates(city: str):
+    """Fetches latitude and longitude for a city name using OWM Geocoding API."""
+    url = f"{OPENWEATHER_ENDPOINT_CORD}?q={city}&limit=1&appid={OPENWEATHER_KEY}"
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        if data:
+            return data[0]['lat'], data[0]['lon']
+        return None, None
+    except requests.exceptions.RequestException as e:
+        return None, None
+
 # --- Main API Function ---
 
 def get_forecast_summary(city_name, start_date_str, duration_days):
     """
     Fetches the 5-day / 3-hour forecast and generates a summarized daily report.
     """
+
+    lat, lon = _get_coordinates(city_name.strip())
+
+    if lat is None or lon is None:
+        return "Weather data unavailable: Could not find city coordinates."
+
     if not OPENWEATHER_KEY:
         logger.error("🚫 OPENWEATHER_KEY is missing. Check config/config.py or environment variables.")
         return "Weather service unavailable (API Key missing)."
@@ -118,12 +135,14 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
         return cache.get(cache_key, {}).get("data", "Weather data is currently unavailable (API limit reached).")
 
     # Prepare API request
-    url = f"{OPENWEATHER_ENDPOINT}?q={city}&appid={OPENWEATHER_KEY}&units=metric"
-    logger.debug(f"API Request URL: {url}")  # Use debug to avoid logging API key if not needed
 
     # --- Execute API Call ---
     try:
-        logger.info(f"⚡ Calling OpenWeatherMap API for {city} (Call #{counter['count'] + 1})...")
+        # 5-day / 3-hour forecast endpoint, requires lat/lon for best data
+        url = f"{OPENWEATHER_ENDPOINT}?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
+        logger.debug(f"API Request URL: {url}")  # Use debug to avoid logging API key if not needed
+
+        logger.info(f"⚡ Calling OpenWeatherMap API for {lat} and {lon} (Call #{counter['count'] + 1})...")
         response = requests.get(url, timeout=10)
 
         if response.status_code != 200:
