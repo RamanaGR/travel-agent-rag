@@ -18,7 +18,7 @@ COUNTER_FILE = "data/api_usage_v3.txt"
 CACHE_FILE = "data/weather_cache_v3.json"
 CACHE_TTL = 3600  # 1 hour
 DAILY_LIMIT = 1000
-
+OPENWEATHER_KEY = "7d10bb3025ee1b55a21f03fcf744a05f"
 # --- Counter and Cache Management Functions (Logging added) ---
 
 def _load_counter():
@@ -183,7 +183,7 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
     logger.warning(f"End Date  {end_date}.")
     for item in forecast_list:
         dt_obj = datetime.fromtimestamp(item['dt']).date()
-
+        logger.info(f"Each Number of day {item}.")
         # Only process items within the trip duration
         if start_date <= dt_obj <= end_date:
             day_str = dt_obj.strftime('%Y-%m-%d')
@@ -202,11 +202,12 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
                 daily_weather[day_str]['rain_sum'] += item['rain']['3h']
             if 'snow' in item and '3h' in item['snow']:
                 daily_weather[day_str]['rain_sum'] += item['snow']['3h']  # Treat snow volume the same for planning
+            logger.info(f"Daily_weather DICT of day {daily_weather}.")
 
     weather_lines = []
     # Sort by date to ensure Day 1, Day 2, etc., are correct
     sorted_days = sorted(daily_weather.keys())
-
+    logger.info(f"Sorted Number for {sorted_days} days.")
     for i, day_str in enumerate(sorted_days):
         data = daily_weather[day_str]
         avg_temp = sum(data['temps']) / len(data['temps']) if data['temps'] else 0
