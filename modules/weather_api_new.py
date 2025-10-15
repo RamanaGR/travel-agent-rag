@@ -132,9 +132,10 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
             return cache.get(cache_key, {}).get("data", f"Weather forecast failed (Status {response.status_code}).")
 
         # Increment counter on successful call
-        _increment_counter()
-
+        #_increment_counter()
+        logger.info(f"API call successful. response received {response.text}.")
         data = response.json()
+        logger.info(f"API call successful. Data received {data}.")
         logger.info(f"API call successful. Data received for {data.get('city', {}).get('name', 'N/A')}.")
 
     except requests.exceptions.Timeout:
