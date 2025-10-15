@@ -1,12 +1,19 @@
 import os
 import json
+import sys
+
 import numpy as np
+import logging # <--- ADDED: Python logging module
+
+# Configure the logger for this module
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO) # Set default log level for this module
 
 # Set environment variable to suppress potential MKL warnings/errors
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import faiss
 from openai import OpenAI
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 from config.config import (
     OPENAI_API_KEY,
     CACHE_FILE as DATA_FILE,
@@ -16,6 +23,12 @@ from config.config import (
     USE_OFFLINE_MODE,
 )
 
+if not OPENAI_API_KEY:
+    # If the key is still missing, we raise an error.
+    raise ValueError(
+        "OpenAI API Key not found. Please set OPENAI_API_KEY in config/config.py or as an environment variable."
+    )
+
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -24,114 +37,172 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 # --- Data Loading and Index Building Functions ---
 # =====================================================================
 
+
 def load_and_normalize_data(data_file=DATA_FILE):
     """Load attractions.json and normalize all records for embedding."""
-    print(f"Loading data from {data_file}")
+    # CHANGED: Replaced print() with logger.info()
+    logger.info(f"Loading data from {data_file}")
 
     # Ensure 'data' directory exists for config files
     os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
 
     # Handle case where attractions.json might not exist yet
     if not os.path.exists(data_file):
-        print(f"⚠️ Data file not found at {data_file}. Returning empty list.")
+        # CHANGED: Replaced print() with logger.warning()
+        logger.warning(f"⚠️ Data file not found at {data_file}. Please ensure you have your attractions data.")
         return []
 
-    with open(data_file, "r") as f:
-        data = json.load(f)
+    # ... (rest of function remains the same)
+    try:
+        with open(data_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        logger.error(f"Error decoding JSON from {data_file}: {e}")
+        return []
+    except Exception as e:
+        logger.error(f"Error loading data file {data_file}: {e}")
+        return []
 
-    all_entries = []
-    for city, attractions in data.items():
-        for item in attractions:
-            # Safely extract key fields (different APIs have different names)
-            name = item.get("name", "")
-            desc = item.get("description", "")
-            category = item.get("category", "")
-            rating = item.get("rating", "")
-            reviews = item.get("reviews", "")
+    entries = []
+    # Normalize data structures
+    for item in data:
+        # Create a combined description for embedding
+        combined_text = (
+            f"Name: {item.get('name', '')}. "
+            f"Category: {item.get('category', '')}. "
+            f"City: {item.get('city', '')}. "
+            f"Description: {item.get('description', '')}"
+        )
+        if combined_text.strip():
+            item["combined_text"] = combined_text
+            entries.append(item)
 
-            # Build unified descriptive text for embedding
-            text = f"{name}. {desc} {category} Rated {rating} with {reviews} reviews. Located in {city}."
-            text = text.strip()
+    logger.info(f"Successfully loaded and normalized {len(entries)} entries.")
+    return entries
 
-            all_entries.append({
-                "city": city,
-                "name": name,
-                "text": text,
-                "meta": item
-            })
 
-    print(f"Total entries loaded: {len(all_entries)}")
-    return all_entries
+def get_embedding(text):
+    """Generates an embedding for a given text using the OpenAI model."""
+    if USE_OFFLINE_MODE:
+        return np.zeros(1536)  # Return dummy embedding in offline mode
+
+    try:
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=text,
+        )
+        return np.array(response.data[0].embedding, dtype=np.float32)
+    except Exception as e:
+        logger.error(f"OpenAI Embedding API error: {e}")
+        return None
 
 
 def build_embeddings(entries):
-    """Generates embeddings and builds a FAISS index synchronously."""
-
-    if not entries:
-        print("🔴 Cannot build index: No entries loaded.")
+    """Generates embeddings and builds the FAISS index."""
+    if USE_OFFLINE_MODE:
+        logger.warning("Offline mode active. Skipping embedding generation and FAISS index build.")
         return
 
-    print("Starting synchronous embedding generation and index build...")
+    embeddings = []
+    metadata = []
+    logger.info(f"Starting to generate embeddings for {len(entries)} entries...")
 
-    texts = [entry["text"] for entry in entries]
-    meta_data = [entry["meta"] for entry in entries]
+    # Load existing indices to avoid regenerating all embeddings
+    if os.path.exists(EMBEDDINGS_FILE) and os.path.exists(META_FILE):
+        logger.info("Existing embeddings found. Skipping regeneration.")
+        # Load the index and metadata
+        try:
+            index = faiss.read_index(INDEX_FILE)
+            with open(META_FILE, 'r') as f:
+                metadata = json.load(f)
+            logger.info(f"Loaded existing index with {index.ntotal} vectors.")
+            return index, metadata
+        except Exception as e:
+            logger.warning(f"Failed to load existing FAISS index/metadata: {e}. Rebuilding index.")
+            # Continue to rebuild if loading fails
 
+    # Actual building process
+    for entry in entries:
+        embedding = get_embedding(entry["combined_text"])
+        if embedding is not None:
+            embeddings.append(embedding)
+            # Store only essential metadata for the search result
+            metadata.append({
+                "name": entry.get("name"),
+                "city": entry.get("city"),
+                "category": entry.get("category"),
+                "rating": entry.get("rating"),
+                "reviews": entry.get("reviews"),
+                "link": entry.get("link"),
+                "photo": entry.get("photo"),
+            })
+
+    if not embeddings:
+        logger.error("No embeddings could be generated. Cannot build index.")
+        return None, None
+
+    embeddings_array = np.vstack(embeddings)
+    dim = embeddings_array.shape[1]
+    index = faiss.IndexFlatL2(dim)
+    index.add(embeddings_array)
+
+    # Save the index and metadata
+    try:
+        faiss.write_index(index, INDEX_FILE)
+        with open(META_FILE, 'w') as f:
+            json.dump(metadata, f)
+        logger.info(f"FAISS index built and saved successfully with {index.ntotal} vectors.")
+        return index, metadata
+    except Exception as e:
+        logger.error(f"Failed to save FAISS index or metadata: {e}")
+        return None, None
+
+
+def load_index():
+    """Load the FAISS index and metadata from disk."""
     if USE_OFFLINE_MODE:
-        # Create random embeddings for offline testing
-        embeddings = np.random.rand(len(texts), 1536).astype("float32")
-    else:
-        # Call OpenAI to generate embeddings
-        response = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=texts
-        )
-        embeddings = np.array([d.embedding for d in response.data], dtype="float32")
-
-    # Save embeddings and metadata
-    np.save(EMBEDDINGS_FILE, embeddings)
-    with open(META_FILE, "w") as f:
-        json.dump(meta_data, f)
-
-    # Build FAISS index
-    d = embeddings.shape[1]  # Dimension of the embeddings (e.g., 1536)
-    index = faiss.IndexFlatL2(d)
-    index.add(embeddings)
-    faiss.write_index(index, INDEX_FILE)
-
-    print(f"✅ Index built with {index.ntotal} vectors and saved successfully.")
-
-
-def search_attractions(query: str, destination_city: str, top_k: int = 5):
-    """Search the FAISS index for the most relevant attractions, filtered by city."""
+        logger.warning("Offline mode active. Cannot load FAISS index.")
+        return None, None
 
     if not os.path.exists(INDEX_FILE) or not os.path.exists(META_FILE):
-        print("⚠️ RAG Index files not found. Returning empty list.")
+        logger.warning("FAISS index or metadata file missing. Please run build_embeddings first.")
+        return None, None
+
+    try:
+        index = faiss.read_index(INDEX_FILE)
+        with open(META_FILE, 'r') as f:
+            metadata = json.load(f)
+        logger.info(f"Loaded FAISS index with {index.ntotal} vectors.")
+        return index, metadata
+    except Exception as e:
+        logger.error(f"Error loading FAISS index or metadata: {e}")
+        return None, None
+
+
+def search_attractions(query, destination_city, top_k=5):
+    """Searches the FAISS index for attractions relevant to the query."""
+    index, metadata = load_index()
+    if index is None or metadata is None:
+        logger.error("Search failed: RAG index not available.")
         return []
 
-    # Load index and metadata
-    index = faiss.read_index(INDEX_FILE)
+    query_embedding = get_embedding(query)
+    if query_embedding is None:
+        logger.error("Search failed: Could not generate query embedding.")
+        return []
 
-    with open(META_FILE, "r") as f:
-        meta = json.load(f)
+    # Reshape for FAISS search
+    query_vector = query_embedding.reshape(1, -1)
 
-    if USE_OFFLINE_MODE:
-        print("🟡 Offline mode search: generating random query embedding.")
-        q_embed = np.random.rand(1, 1536).astype("float32")
-    else:
-        response = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=query
-        )
-        q_embed = np.array(response.data[0].embedding, dtype="float32").reshape(1, -1)
+    # Search the index (D is distances, I is indices)
+    D, I = index.search(query_vector, k=index.ntotal) # Search the whole index for now
 
-    # Search the index for more than 'top_k' results to allow for filtering
-    search_k = max(top_k * 5, 25)
-    distances, indices = index.search(q_embed, search_k)
-    raw_results = [meta[i] for i in indices[0]]
+    # Map indices back to attraction metadata
+    all_results = [metadata[i] for i in I[0]]
 
-    # Filter by destination city
+    # Filter by destination city and limit to top_k
     city_filtered_results = []
-    for attraction in raw_results:
+    for attraction in all_results:
         # Check if the city metadata matches the requested destination
         if attraction.get('city', '').lower() == destination_city.lower():
             city_filtered_results.append(attraction)
@@ -142,13 +213,14 @@ def search_attractions(query: str, destination_city: str, top_k: int = 5):
 
     results = city_filtered_results
 
-    print(f"🔍 Top {len(results)} results for: '{query}' (Filtered for {destination_city})")
+    # CHANGED: Replaced print() with logger.info()
+    logger.info(f"🔍 Top {len(results)} results for: '{query}' (Filtered for {destination_city})")
     return results
 
 
-# ============================================================\
+# =============================================================
 # ✅ Lightweight Wrapper Class for Travel Agent Integration
-# ============================================================\
+# =============================================================
 class RAGEngine:
     """Simple wrapper around the above RAG functions."""
 
