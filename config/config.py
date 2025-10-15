@@ -33,7 +33,8 @@ META_FILE = os.path.join(DATA_DIR, "attraction_meta.json")
 # 🌐 API Endpoints
 # -------------------------------
 RAPIDAPI_HOST = "travel-advisor.p.rapidapi.com"
-OPENWEATHER_ENDPOINT = "https://api.openweathermap.org/data/2.5/weather"
+OPENWEATHER_ENDPOINT = "https://api.openweathermap.org/data/2.5/forecast"
+OPENWEATHER_ENDPOINT_CORD = "http://api.openweathermap.org/geo/1.0/direct"
 
 # -------------------------------
 # 🧩 General Settings
