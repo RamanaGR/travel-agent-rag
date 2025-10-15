@@ -152,9 +152,9 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
 
         # Increment counter on successful call
         #_increment_counter()
-        logger.info(f"API call successful. response received {response.text}.")
+       # logger.info(f"API call successful. response received {response.text}.")
         data = response.json()
-        logger.info(f"API call successful. Data received {data}.")
+        #logger.info(f"API call successful. Data received {data}.")
         logger.info(f"API call successful. Data received for {data.get('city', {}).get('name', 'N/A')}.")
 
     except requests.exceptions.Timeout:
@@ -178,8 +178,9 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
     daily_weather = {}
 
     # Determine the end date of the trip for filtering
+    logger.warning(f"End Date  {duration_days}, and Start Date  {start_date_str}")
     end_date = start_date + timedelta(days=duration_days - 1)
-
+    logger.warning(f"End Date  {end_date}.")
     for item in forecast_list:
         dt_obj = datetime.fromtimestamp(item['dt']).date()
 
