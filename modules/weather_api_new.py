@@ -2,28 +2,51 @@ import json
 import os
 import time
 import requests
-from datetime import datetime, timedelta, date as date_obj  # ADDED
+from datetime import datetime, timedelta, date as date_obj
+import logging  # <-- ADDED: Python logging module
+
 from config.config import OPENWEATHER_KEY, OPENWEATHER_ENDPOINT
 
+# --- CONFIGURING LOGGING FOR THIS MODULE ---
+logger = logging.getLogger(__name__)
+# Set to INFO to capture key steps; use DEBUG if you want to see the full request URL
+logger.setLevel(logging.INFO)
+# -------------------------------------------
+
+# Constants
 COUNTER_FILE = "data/api_usage_v3.txt"
 CACHE_FILE = "data/weather_cache_v3.json"
 CACHE_TTL = 3600  # 1 hour
 DAILY_LIMIT = 1000
 
+
+# NOTE: Removed hardcoded API key, rely on config.py
+
+# --- Counter and Cache Management Functions (Logging added) ---
+
 def _load_counter():
     today = time.strftime("%Y-%m-%d")
     if not os.path.exists(COUNTER_FILE):
         return {"date": today, "count": 0}
-    with open(COUNTER_FILE, "r") as f:
-        data = json.load(f)
-    if data.get("date") != today:
-        data = {"date": today, "count": 0}
-    return data
+    try:
+        with open(COUNTER_FILE, "r") as f:
+            data = json.load(f)
+        if data.get("date") != today:
+            data = {"date": today, "count": 0}
+        return data
+    except Exception as e:
+        logger.error(f"Error loading API counter: {e}")
+        return {"date": today, "count": 0}
+
 
 def _save_counter(data):
     os.makedirs(os.path.dirname(COUNTER_FILE), exist_ok=True)
-    with open(COUNTER_FILE, "w") as f:
-        json.dump(data, f)
+    try:
+        with open(COUNTER_FILE, "w") as f:
+            json.dump(data, f)
+    except Exception as e:
+        logger.error(f"Error saving API counter: {e}")
+
 
 def _increment_counter():
     data = _load_counter()
@@ -31,144 +54,171 @@ def _increment_counter():
     _save_counter(data)
     return data["count"]
 
+
 def load_counter():
     return _load_counter()
 
+
 def _load_cache():
     if os.path.exists(CACHE_FILE):
-        return json.load(open(CACHE_FILE))
+        try:
+            with open(CACHE_FILE, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading weather cache: {e}")
+            return {}
     return {}
+
 
 def _save_cache(cache):
     os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
-    json.dump(cache, open(CACHE_FILE, "w"))
-
-
-# --- NEW HELPER FUNCTION TO GET COORDINATES ---
-def _get_coordinates(city: str):
-    """Fetches latitude and longitude for a city name using OWM Geocoding API."""
-    url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={OPENWEATHER_KEY}"
     try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        if data:
-            return data[0]['lat'], data[0]['lon']
-        return None, None
-    except requests.exceptions.RequestException as e:
-        return None, None
-def get_forecast_summary_v2(city: str, start_date_str: str, duration_days: int) -> str:
-    try:
-        lat, lon = _get_coordinates(city)
-        # 5-day / 3-hour forecast endpoint, requires lat/lon for best data
-        url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
-        res = requests.get(url, timeout=5)
-        # _increment_counter()
-
-        if res.status_code != 200:
-            return f"(Forecast fetch error {res.status_code})"
-
-        data = res.json()
-        if not data.get('list'):
-            return "Detailed weather forecast unavailable."
-
-        return data.get('list')
+        with open(CACHE_FILE, "w") as f:
+            json.dump(cache, f)
     except Exception as e:
-        return f"(Forecast unavailable — {e})"
+        logger.error(f"Error saving weather cache: {e}")
 
 
-# --- NEW CORE FUNCTION: GET FORECAST SUMMARY ---
-def get_forecast_summary(city: str, start_date_str: str, duration_days: int) -> str:
+# --- Main API Function ---
+
+def get_forecast_summary(city_name, start_date_str, duration_days):
     """
-    Fetches and summarizes the weather forecast for the trip duration (up to 5 days).
-    This function uses the 5-day/3-hour forecast API and aggregates the data daily.
+    Fetches the 5-day / 3-hour forecast and generates a summarized daily report.
     """
-    # 🚨 CRITICAL: Explicit check for the configuration key 🚨
     if not OPENWEATHER_KEY:
-        return "Weather data unavailable: OPENWEATHER_KEY is missing or empty in config/config.py"
-    # 🚨 END CRITICAL CHECK 🚨
+        logger.error("🚫 OPENWEATHER_KEY is missing. Check config/config.py or environment variables.")
+        return "Weather service unavailable (API Key missing)."
+
+    # Input validation and date parsing
     try:
-        lat, lon = _get_coordinates(city)
-    except Exception as e:
-        return f"(coordinates unavailable — {e})"
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        logger.error(f"Invalid date format: {start_date_str}")
+        return "Weather service unavailable (Invalid start date)."
 
-    if lat is None or lon is None:
-        return "Weather data unavailable: Could not find city coordinates."
+    city = city_name.strip()
+    if not city:
+        logger.warning("City name is empty. Skipping weather fetch.")
+        return "Weather service unavailable (No city provided)."
 
+    # Cache key generation
+    cache_key = f"{city.lower()}-{start_date_str}-{duration_days}"
     cache = _load_cache()
-    cache_key = f"forecast_{city}_{start_date_str}_{duration_days}"
     now = time.time()
 
-    if cache and cache_key in cache and now - cache[cache_key]["timestamp"] < CACHE_TTL:
-        return f"(cached forecast) {cache[cache_key]['data']}"
+    # Check cache
+    if cache_key in cache and (now - cache[cache_key]["timestamp"]) < CACHE_TTL:
+        logger.info(f"✅ Cache hit for weather forecast: {city}")
+        return cache[cache_key]["data"]
 
+    # Check daily usage limit
     counter = _load_counter()
     if counter["count"] >= DAILY_LIMIT:
-        return "⚠️ Daily API limit reached for forecast."
+        logger.warning(f"🛑 Daily API limit reached: {counter['count']}/{DAILY_LIMIT}. Returning cached data or error.")
+        return cache.get(cache_key, {}).get("data", "Weather data is currently unavailable (API limit reached).")
 
+    # Prepare API request
+    url = f"{OPENWEATHER_ENDPOINT}?q={city}&appid={OPENWEATHER_KEY}&units=metric"
+    logger.debug(f"API Request URL: {url}")  # Use debug to avoid logging API key if not needed
+
+    # --- Execute API Call ---
     try:
-        # 5-day / 3-hour forecast endpoint, requires lat/lon for best data
-        url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
-        res = requests.get(url, timeout=5)
-        # _increment_counter()
+        logger.info(f"⚡ Calling OpenWeatherMap API for {city} (Call #{counter['count'] + 1})...")
+        response = requests.get(url, timeout=10)
 
-        if res.status_code != 200:
-            return f"(Forecast fetch error {res.status_code})"
+        if response.status_code != 200:
+            logger.error(f"❌ OpenWeather API Error: Status Code {response.status_code}. Response: {response.text}")
+            # If API fails, return current summary or a failure message
+            return cache.get(cache_key, {}).get("data", f"Weather forecast failed (Status {response.status_code}).")
 
-        data = res.json()
+        # Increment counter on successful call
+        _increment_counter()
 
-        # 🚨 FIX: Explicitly extract the list of forecast items from the 'list' key
-        forecast_items = data.get('list')
+        data = response.json()
+        logger.info(f"API call successful. Data received for {data.get('city', {}).get('name', 'N/A')}.")
 
-        if not forecast_items:
-            return "Detailed weather forecast unavailable."
+    except requests.exceptions.Timeout:
+        logger.error("❌ OpenWeather API Request Timeout (10 seconds).")
+        return cache.get(cache_key, {}).get("data", "Weather forecast failed (Request timeout).")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"❌ OpenWeather API Network Error: {e}")
+        return cache.get(cache_key, {}).get("data", "Weather forecast failed (Network error).")
+    except json.JSONDecodeError as e:
+        logger.error(f"❌ Failed to decode JSON response from OpenWeather API: {e}")
+        return cache.get(cache_key, {}).get("data", "Weather forecast failed (Invalid response format).")
 
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-        end_date = start_date + timedelta(days=duration_days - 1)
+    # --- Data Processing and Summarization ---
 
-        daily_weather = {}
+    # OpenWeatherMap provides a 5-day forecast with 3-hour steps.
+    forecast_list = data.get('list', [])
+    if not forecast_list:
+        logger.warning(f"No forecast data ('list') found in API response for {city}.")
+        return "Weather forecast is currently unavailable for this period."
 
-        # Iterate over the explicitly extracted list of items
-        for item in forecast_items:
-            # We use item['dt'] (UNIX timestamp) to get the date object
-            forecast_dt = datetime.fromtimestamp(item['dt']).date()
+    daily_weather = {}
 
-            if start_date <= forecast_dt <= end_date:
-                day_str = forecast_dt.strftime('%Y-%m-%d')
+    # Determine the end date of the trip for filtering
+    end_date = start_date + timedelta(days=duration_days - 1)
 
-                if day_str not in daily_weather:
-                    daily_weather[day_str] = {
-                        'temps': [],
-                        'descriptions': set(),
-                        'rain_sum': 0  # Total rain for the day in mm
-                    }
+    for item in forecast_list:
+        dt_obj = datetime.fromtimestamp(item['dt']).date()
 
-                daily_weather[day_str]['temps'].append(item['main']['temp'])
-                daily_weather[day_str]['descriptions'].add(item['weather'][0]['description'])
-                # Aggregate rain/snow volume
-                if 'rain' in item and '3h' in item['rain']:
-                    daily_weather[day_str]['rain_sum'] += item['rain']['3h']
-                if 'snow' in item and '3h' in item['snow']:
-                    daily_weather[day_str]['rain_sum'] += item['snow']['3h']  # Treat snow volume the same for planning
+        # Only process items within the trip duration
+        if start_date <= dt_obj <= end_date:
+            day_str = dt_obj.strftime('%Y-%m-%d')
 
-        weather_lines = []
-        for i, (day_str, data) in enumerate(daily_weather.items()):
-            avg_temp = sum(data['temps']) / len(data['temps']) if data['temps'] else 0
-            main_desc = ", ".join(data['descriptions'])
-            rain_alert = ""
-            if data['rain_sum'] > 10:  # Heuristic for heavy rain/snow
-                rain_alert = "** (HEAVY RAIN/SNOW WARNING - Plan INDOOR/COVERED activities)**"
+            if day_str not in daily_weather:
+                daily_weather[day_str] = {
+                    'temps': [],
+                    'descriptions': set(),
+                    'rain_sum': 0  # Total rain for the day in mm
+                }
 
-            weather_lines.append(
-                f"Day {i + 1} ({day_str}): Avg Temp {int(avg_temp)}°C. "
-                f"Conditions: {main_desc.capitalize()}{rain_alert}. "
-            )
+            daily_weather[day_str]['temps'].append(item['main']['temp'])
+            daily_weather[day_str]['descriptions'].add(item['weather'][0]['description'])
+            # Aggregate rain/snow volume
+            if 'rain' in item and '3h' in item['rain']:
+                daily_weather[day_str]['rain_sum'] += item['rain']['3h']
+            if 'snow' in item and '3h' in item['snow']:
+                daily_weather[day_str]['rain_sum'] += item['snow']['3h']  # Treat snow volume the same for planning
 
-        weather_summary = "\n".join(weather_lines)
+    weather_lines = []
+    # Sort by date to ensure Day 1, Day 2, etc., are correct
+    sorted_days = sorted(daily_weather.keys())
 
-        cache[cache_key] = {"data": weather_summary, "timestamp": now}
-        _save_cache(cache)
-        return weather_summary
+    for i, day_str in enumerate(sorted_days):
+        data = daily_weather[day_str]
+        avg_temp = sum(data['temps']) / len(data['temps']) if data['temps'] else 0
+        main_desc = ", ".join(data['descriptions'])
+        rain_alert = ""
 
-    except Exception as e:
-        return f"(Forecast unavailable — {e})"
+        if data['rain_sum'] > 10:  # Heuristic for heavy rain/snow (10mm is a lot over one day)
+            rain_alert = "** (HEAVY RAIN/SNOW WARNING - Plan INDOOR/COVERED activities)**"
+
+        weather_lines.append(
+            f"Day {i + 1} ({day_str}): Avg Temp {int(avg_temp)}°C. "
+            f"Conditions: {main_desc.capitalize()}{rain_alert}. "
+        )
+
+    weather_summary = "\n".join(weather_lines)
+    logger.info(f"Weather summary generated successfully for {len(sorted_days)} days.")
+
+    # Save to cache before returning
+    cache[cache_key] = {"data": weather_summary, "timestamp": now}
+    _save_cache(cache)
+
+    return weather_summary
+
+
+if __name__ == "__main__":
+    # Example usage for local testing
+    # Note: Requires OPENWEATHER_KEY to be set in config.py
+    test_city = "London"
+    test_start_date = date_obj.today().strftime('%Y-%m-%d')
+    test_duration = 3
+
+    print(f"--- Running Test Forecast for {test_city} ---")
+    summary = get_forecast_summary(test_city, test_start_date, test_duration)
+    print("\n[Generated Summary]")
+    print(summary)
+    print("-----------------------------------------")
