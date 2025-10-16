@@ -3,22 +3,17 @@ import os
 import time
 import requests
 from datetime import datetime, timedelta, date as date_obj
-import logging  # <-- ADDED: Python logging module
+import logging
 
 from config.config import OPENWEATHER_KEY, OPENWEATHER_ENDPOINT, OPENWEATHER_ENDPOINT_CORD
 
-# --- CONFIGURING LOGGING FOR THIS MODULE ---
 logger = logging.getLogger(__name__)
-# Set to INFO to capture key steps; use DEBUG if you want to see the full request URL
 logger.setLevel(logging.INFO)
-# -------------------------------------------
 
-# Constants
 COUNTER_FILE = "data/api_usage_v3.txt"
 CACHE_FILE = "data/weather_cache_v3.json"
 CACHE_TTL = 3600  # 1 hour
 DAILY_LIMIT = 1000
-# --- Counter and Cache Management Functions (Logging added) ---
 
 def _load_counter():
     today = time.strftime("%Y-%m-%d")
@@ -34,7 +29,6 @@ def _load_counter():
         logger.error(f"Error loading API counter: {e}")
         return {"date": today, "count": 0}
 
-
 def _save_counter(data):
     os.makedirs(os.path.dirname(COUNTER_FILE), exist_ok=True)
     try:
@@ -43,17 +37,14 @@ def _save_counter(data):
     except Exception as e:
         logger.error(f"Error saving API counter: {e}")
 
-
 def _increment_counter():
     data = _load_counter()
     data["count"] += 1
     _save_counter(data)
     return data["count"]
 
-
 def load_counter():
     return _load_counter()
-
 
 def _load_cache():
     if os.path.exists(CACHE_FILE):
@@ -65,7 +56,6 @@ def _load_cache():
             return {}
     return {}
 
-
 def _save_cache(cache):
     os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
     try:
@@ -74,8 +64,6 @@ def _save_cache(cache):
     except Exception as e:
         logger.error(f"Error saving weather cache: {e}")
 
-
-# --- NEW HELPER FUNCTION TO GET COORDINATES ---
 def _get_coordinates(city: str):
     """Fetches latitude and longitude for a city name using OWM Geocoding API."""
     url = f"{OPENWEATHER_ENDPOINT_CORD}?q={city}&limit=1&appid={OPENWEATHER_KEY}"
@@ -88,8 +76,6 @@ def _get_coordinates(city: str):
         return None, None
     except requests.exceptions.RequestException as e:
         return None, None
-
-# --- Main API Function ---
 
 def get_forecast_summary(city_name, start_date_str, duration_days):
     """
@@ -119,7 +105,7 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
 
     # Cache key generation
     cache_key = f"{city.lower()}-{start_date_str}-{duration_days}"
-    cache = {} #_load_cache()
+    cache = _load_cache()
     now = time.time()
 
     # Check cache
@@ -133,27 +119,23 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
         logger.warning(f"🛑 Daily API limit reached: {counter['count']}/{DAILY_LIMIT}. Returning cached data or error.")
         return cache.get(cache_key, {}).get("data", "Weather data is currently unavailable (API limit reached).")
 
-    # Prepare API request
-
     # --- Execute API Call ---
     try:
         # 5-day / 3-hour forecast endpoint, requires lat/lon for best data
         url = f"{OPENWEATHER_ENDPOINT}?lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
-        logger.debug(f"API Request URL: {url}")  # Use debug to avoid logging API key if not needed
+        logger.debug(f"API Request URL: {url}")
 
         logger.info(f"⚡ Calling OpenWeatherMap API for {lat} and {lon} (Call #{counter['count'] + 1})...")
         response = requests.get(url, timeout=10)
 
         if response.status_code != 200:
             logger.error(f"❌ OpenWeather API Error: Status Code {response.status_code}. Response: {response.text}")
-            # If API fails, return current summary or a failure message
             return cache.get(cache_key, {}).get("data", f"Weather forecast failed (Status {response.status_code}).")
 
         # Increment counter on successful call
-        #_increment_counter()
-       # logger.info(f"API call successful. response received {response.text}.")
+        _increment_counter()
+
         data = response.json()
-        #logger.info(f"API call successful. Data received {data}.")
         logger.info(f"API call successful. Data received for {data.get('city', {}).get('name', 'N/A')}.")
 
     except requests.exceptions.Timeout:
@@ -168,7 +150,6 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
 
     # --- Data Processing and Summarization ---
 
-    # OpenWeatherMap provides a 5-day forecast with 3-hour steps.
     forecast_list = data.get('list', [])
     if not forecast_list:
         logger.warning(f"No forecast data ('list') found in API response for {city}.")
@@ -177,12 +158,9 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
     daily_weather = {}
 
     # Determine the end date of the trip for filtering
-    logger.warning(f"End Date  {duration_days}, and Start Date  {start_date_str}")
     end_date = start_date + timedelta(days=duration_days - 1)
-    logger.warning(f"End Date  {end_date}.")
     for item in forecast_list:
         dt_obj = datetime.fromtimestamp(item['dt']).date()
-        logger.info(f"Each Number of day {item}.")
         # Only process items within the trip duration
         if start_date <= dt_obj <= end_date:
             day_str = dt_obj.strftime('%Y-%m-%d')
@@ -191,29 +169,25 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
                 daily_weather[day_str] = {
                     'temps': [],
                     'descriptions': set(),
-                    'rain_sum': 0  # Total rain for the day in mm
+                    'rain_sum': 0
                 }
 
             daily_weather[day_str]['temps'].append(item['main']['temp'])
             daily_weather[day_str]['descriptions'].add(item['weather'][0]['description'])
-            # Aggregate rain/snow volume
             if 'rain' in item and '3h' in item['rain']:
                 daily_weather[day_str]['rain_sum'] += item['rain']['3h']
             if 'snow' in item and '3h' in item['snow']:
-                daily_weather[day_str]['rain_sum'] += item['snow']['3h']  # Treat snow volume the same for planning
-            logger.info(f"Daily_weather DICT of day {daily_weather}.")
+                daily_weather[day_str]['rain_sum'] += item['snow']['3h']
 
     weather_lines = []
-    # Sort by date to ensure Day 1, Day 2, etc., are correct
     sorted_days = sorted(daily_weather.keys())
-    logger.info(f"Sorted Number for {sorted_days} days.")
     for i, day_str in enumerate(sorted_days):
         data = daily_weather[day_str]
         avg_temp = sum(data['temps']) / len(data['temps']) if data['temps'] else 0
         main_desc = ", ".join(data['descriptions'])
         rain_alert = ""
 
-        if data['rain_sum'] > 10:  # Heuristic for heavy rain/snow (10mm is a lot over one day)
+        if data['rain_sum'] > 10:
             rain_alert = "** (HEAVY RAIN/SNOW WARNING - Plan INDOOR/COVERED activities)**"
 
         weather_lines.append(
@@ -230,10 +204,7 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
 
     return weather_summary
 
-
 if __name__ == "__main__":
-    # Example usage for local testing
-    # Note: Requires OPENWEATHER_KEY to be set in config.py
     test_city = "London"
     test_start_date = date_obj.today().strftime('%Y-%m-%d')
     test_duration = 3
