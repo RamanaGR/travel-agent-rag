@@ -191,7 +191,7 @@ with st.expander("See example travel requests", expanded=False):
             """
             <div class="example-card">
                 <b>Minimal</b><br>
-                <span class="keyword">New York</span> for <span class="keyword">the weekend</span> with a <span class="keyword">$1500 budget</span>.
+                <span class="keyword">Las Vegas</span> for <span class="keyword">the weekend</span> with a <span class="keyword">$1500 budget</span>.
             </div>
             """,
             unsafe_allow_html=True
@@ -200,7 +200,7 @@ with st.expander("See example travel requests", expanded=False):
             """
             <div class="example-card">
                 <b>General</b><br>
-                Show me things to do in <span class="keyword">London</span> <span class="keyword">this week</span>.
+                Show me things to do in <span class="keyword">Bangkok</span> <span class="keyword">this week</span>.
             </div>
             """,
             unsafe_allow_html=True
