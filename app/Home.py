@@ -34,28 +34,36 @@ try:
         css_content = f.read()
     css_content += """
     .example-card {
-        padding: 10px;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        background-color: #f9f9f9;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        padding: 6px 10px;                     /* Less padding for tighter look */
+        border: 1px solid #dcdcdc;             /* Softer border */
+        border-radius: 6px;                    /* Slightly smaller corners */
+        background-color: #fafafa;             /* Light gray background */
+        margin-bottom: 6px;                    /* Reduced vertical spacing */
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);/* Subtle shadow */
+        transition: all 0.2s ease-in-out;      /* Smooth hover transition */
+    }
+    .example-card:hover {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Slight pop on hover */
     }
     .example-card span.keyword {
         font-weight: 600;
         color: #007bff;
     }
-    /* Style for city input box in sidebar */
-    div[data-testid="stTextInput"] input[placeholder="Enter City for Index Build"] {
-        border: 2px solid #007bff;
-        border-radius: 4px;
-        padding: 8px;
-        transition: border-color 0.3s ease;
+
+    /* Make sidebar text input clearly visible */
+    section[data-testid="stSidebar"] input[type="text"] {
+        border: 1.5px solid #4A90E2 !important;
+        border-radius: 8px !important;
+        padding: 6px 10px !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
-    div[data-testid="stTextInput"] input[placeholder="Enter City for Index Build"]:focus {
-        border-color: #005bb5;
-        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    section[data-testid="stSidebar"] input[type="text"]:focus {
+        border-color: #2E7D32 !important;
+        box-shadow: 0 0 5px rgba(46, 125, 50, 0.5);
     }
+  
     """
     st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
     logger.info("✅ CSS loaded and injected successfully")
@@ -77,17 +85,26 @@ except Exception as e:
     st.error(f"Configuration error: {e}")
     raise
 
+# Initialize session state
+if 'rag_index_built' not in st.session_state:
+    logger.debug("Checking RAG index files on startup")
+    faiss_exists = os.path.exists(INDEX_FILE)
+    meta_exists = os.path.exists(META_FILE)
+    st.session_state.rag_index_built = faiss_exists and meta_exists
+    st.session_state.index_city = None  # Initialize index_city
+    logger.info(f"RAG index status: {'Built' if st.session_state.rag_index_built else 'Not Built'}")
+
 # Sidebar setup
 try:
     logger.debug("Rendering sidebar")
     st.sidebar.image("app/assets/img.png", use_container_width=True)
     st.sidebar.markdown("### ✈️ AI Travel Planner")
     st.sidebar.caption("Personalized itineraries using Generative AI")
-    # st.sidebar.markdown("---")
-    # st.sidebar.subheader("🧭 Navigation")
-    # st.sidebar.page_link("Home.py", label="🏠 Home")
-    # st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
-    # st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🧭 Navigation")
+    st.sidebar.page_link("Home.py", label="🏠 Home")
+    st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
+    st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
     logger.info("✅ Sidebar rendered successfully")
 except Exception as e:
     logger.error(f"❌ Failed to render sidebar: {e}")
@@ -97,23 +114,16 @@ except Exception as e:
 st.sidebar.markdown("---")
 st.sidebar.subheader("⚙️ RAG Index Control")
 
-# Initialize session state for RAG status
-if 'rag_index_built' not in st.session_state:
-    logger.debug("Checking RAG index files on startup")
-    faiss_exists = os.path.exists(INDEX_FILE)
-    meta_exists = os.path.exists(META_FILE)
-    st.session_state.rag_index_built = faiss_exists and meta_exists
-    logger.info(f"RAG index status: {'Built' if st.session_state.rag_index_built else 'Not Built'}")
-
 # City-specific index build
 st.sidebar.markdown("### Build City-Specific Index")
 city_for_index = st.sidebar.text_input("Enter City for Index Build")
-build_index_button = st.sidebar.button("Build Index", type="primary", disabled=not city_for_index.strip())
+build_index_button = st.sidebar.button("⚙️ Build Attraction Index for City", type="primary", disabled=not city_for_index.strip())
 
 def build_rag_index_for_city(city):
     """Fetch attractions for city and build FAISS index."""
     logger.info(f"⚡ Starting city-specific RAG index build for {city}")
     st.session_state.rag_index_built = False
+    st.session_state.index_city = None
     try:
         with st.spinner(f"Fetching attractions for {city}..."):
             logger.debug(f"Fetching attractions for {city}")
@@ -132,6 +142,7 @@ def build_rag_index_for_city(city):
     except Exception as e:
         logger.error(f"❌ Error building RAG index for {city}: {e}")
         st.session_state.rag_index_built = False
+        st.session_state.index_city = None
         st.error(f"❌ Error building RAG index for {city}: {e}.")
         st.exception(e)
 
@@ -139,10 +150,9 @@ if build_index_button:
     logger.info(f"⚡ User triggered city-specific RAG index build for {city_for_index}")
     build_rag_index_for_city(city_for_index)
 
-if st.session_state.rag_index_built:
-    city = st.session_state.get('index_city', 'Unknown')
-    st.sidebar.success(f"Index Status: Built for {city}")
-    logger.debug(f"RAG index status: Built for {city}")
+if st.session_state.rag_index_built and st.session_state.index_city:
+    st.sidebar.success(f"Index Status: Built for {st.session_state.index_city}")
+    logger.debug(f"RAG index status: Built for {st.session_state.index_city}")
 else:
     st.sidebar.warning("Index Status: Not Built (Will use general knowledge)")
     logger.debug("RAG index status: Not Built")
@@ -277,12 +287,13 @@ if generate:
                     date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
 
             # Check RAG index compatibility
-            if st.session_state.get('rag_index_built', False) and st.session_state.get('index_city', '').lower() != destination.lower():
+            index_city = st.session_state.get('index_city', None)
+            if st.session_state.get('rag_index_built', False) and index_city and index_city.lower() != destination.lower():
                 st.warning(
-                    f"A RAG index is built for {st.session_state.index_city}, but your query is for {destination}. "
+                    f"A RAG index is built for {index_city}, but your query is for {destination}. "
                     f"Please build an index for {destination} in the sidebar for optimal results."
                 )
-                logger.warning(f"⚠️ RAG index built for {st.session_state.index_city}, but query destination is {destination}")
+                logger.warning(f"⚠️ RAG index built for {index_city}, but query destination is {destination}")
 
             if validation_errors:
                 for error in validation_errors:
