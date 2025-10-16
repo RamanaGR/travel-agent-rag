@@ -18,7 +18,6 @@ COUNTER_FILE = "data/api_usage_v3.txt"
 CACHE_FILE = "data/weather_cache_v3.json"
 CACHE_TTL = 3600  # 1 hour
 DAILY_LIMIT = 1000
-OPENWEATHER_KEY = "7d10bb3025ee1b55a21f03fcf744a05f"
 # --- Counter and Cache Management Functions (Logging added) ---
 
 def _load_counter():
@@ -120,7 +119,7 @@ def get_forecast_summary(city_name, start_date_str, duration_days):
 
     # Cache key generation
     cache_key = f"{city.lower()}-{start_date_str}-{duration_days}"
-    cache = _load_cache()
+    cache = {} #_load_cache()
     now = time.time()
 
     # Check cache
