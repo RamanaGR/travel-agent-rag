@@ -20,7 +20,7 @@ USE_OFFLINE_MODE = True  # ✅ Keep True for Streamlit Cloud
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 # --- COMMON DATA FILES ---
-CACHE_FILE = os.path.join(DATA_DIR, "attractions.json")
+CACHE_FILE = os.path.join(DATA_DIR, "attractions_v1.json")
 COUNTER_FILE = os.path.join(DATA_DIR, "attractions_counter.txt")
 GEOID_CACHE_FILE = os.path.join(DATA_DIR, "geoids.json")
 
