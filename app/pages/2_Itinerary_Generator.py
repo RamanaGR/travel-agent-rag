@@ -73,7 +73,7 @@ destination = st.session_state["destination"]
 budget = st.session_state["budget"]
 duration = st.session_state["duration"]
 date = st.session_state["date"]
-rag_index_built = st.session_state.get('rag_index_built', False)
+rag_index_built = st.session_state.get('rag_index_built', True)
 logger.info(f"Session state verified: destination={destination}, budget={budget}, duration={duration}, date={date}, rag_index_built={rag_index_built}")
 
 # Calculate integer duration for API call and LLM prompt
