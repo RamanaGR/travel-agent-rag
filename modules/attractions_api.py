@@ -3,7 +3,6 @@ import os
 import json
 import logging
 from config.config import RAPIDAPI_KEY, RAPIDAPI_HOST, CACHE_FILE, COUNTER_FILE, GEOID_CACHE_FILE
-RAPIDAPI_KEY = "f8c1bd6200msh4d8a0df6e98b36dp13ffbbjsn81b48496711c"
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,

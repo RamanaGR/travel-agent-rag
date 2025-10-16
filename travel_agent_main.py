@@ -13,7 +13,7 @@ from modules.rag_engine import RAGEngine
 # ===============================================================
 # CONFIGURATION
 # ===============================================================
-USE_OFFLINE_MODE = os.getenv("USE_OFFLINE_MODE", "False").lower() == "true"
+USE_OFFLINE_MODE = os.getenv("USE_OFFLINE_MODE", "False")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 
