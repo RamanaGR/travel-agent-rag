@@ -129,11 +129,18 @@ st.markdown("### 🏛️ Attractions")
 try:
     with st.spinner("Fetching attractions..."):
         logger.debug(f"Fetching attractions for {destination}")
-        if st.session_state.get('rag_index_built', False) and st.session_state.get('index_city', '').lower() == destination.lower():
+        index_city = st.session_state.get('index_city', None)
+        if st.session_state.get('rag_index_built', False) and index_city and index_city.lower() == destination.lower():
             logger.debug("Using RAG index for attractions")
             attractions = search_attractions(destination, k=5)
         else:
             logger.debug("Using direct API call for attractions")
+            if st.session_state.get('rag_index_built', False) and index_city:
+                st.warning(
+                    f"A RAG index is built for {index_city}, but your query is for {destination}. "
+                    f"Please build an index for {destination} in the Home page for optimal results."
+                )
+                logger.warning(f"⚠️ RAG index built for {index_city}, but query destination is {destination}")
             attractions = fetch_attractions(destination)
 
         if attractions:
@@ -148,12 +155,12 @@ try:
                             st.image(
                                 image_url,
                                 caption=attraction.get('name', 'Attraction'),
-                                width=250,  # Set default width
+                                width=250,
                                 use_column_width=False,
                                 output_format="auto",
                                 clamp=True,
                                 channels="RGB",
-                                extra_class="attraction-image"  # Custom CSS class
+                                extra_class="attraction-image"
                             )
                             logger.info(f"✅ Rendered image for {attraction.get('name')}")
                         except Exception as e:
