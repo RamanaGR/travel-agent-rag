@@ -4,6 +4,8 @@ import streamlit as st
 from datetime import datetime, timedelta
 import logging
 
+from modules.weather_api import get_weather
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -105,75 +107,60 @@ if not all([destination, budget, duration, date]):
     st.stop()
 
 logger.info(f"⚡ Processing results for destination={destination}, budget={budget}, duration={duration}, date={date}")
+# --- Weather Section ---
+st.markdown("### 🌤 Weather Forecast")
+with st.spinner("Fetching weather forecast..."):
+    logger.info(f"⚡ Fetching weather forecast for {destination}")
+    try:
+        weather_summary = get_weather(destination)
+        logger.debug(f"Weather summary received: {weather_summary}")
+        st.text(weather_summary)
+    except Exception as e:
+        logger.error(f"❌ Failed to fetch weather forecast: {e}")
+        st.error(f"Failed to fetch weather forecast: {e}")
 
-# Weather Forecast
-st.markdown("### 🌤️ Weather Forecast")
-try:
-    with st.spinner("Fetching weather forecast..."):
-        logger.debug(f"Fetching weather for {destination} starting {date}")
-        weather_data = get_forecast_summary(destination, date, duration)
-        if weather_data and isinstance(weather_data, list):
-            st.write(f"**Weather in {destination} starting {date}:**")
-            for day in weather_data:
-                st.write(f"- **{day.get('date', 'Unknown')}**: {day.get('condition', 'N/A')} | Temp: {day.get('temp_min', 'N/A')}°C - {day.get('temp_max', 'N/A')}°C")
-            logger.info("✅ Weather forecast rendered")
-        else:
-            st.warning(f"No weather data available for {destination}. Please check the city name or try again later.")
-            logger.warning(f"⚠️ No weather data for {destination}")
-except Exception as e:
-    logger.error(f"❌ Error fetching weather: {e}")
-    st.warning(f"Could not fetch weather data for {destination}: {e}. Proceeding with general recommendations.")
+# --- Attractions Section ---
+st.markdown("### 🗺️ Top Attractions")
+cols = st.columns(2)
+with st.spinner("Exploring attractions..."):
+    logger.info(f"⚡ Fetching attractions for {destination}")
+    try:
+        attractions = fetch_attractions(destination)
+        logger.debug(f"Fetched {len(attractions)} attractions")
+    except Exception as e:
+        logger.error(f"❌ Failed to fetch attractions: {e}")
+        attractions = []
+        st.error(f"Failed to fetch attractions: {e}")
 
-# Attractions
-st.markdown("### 🏛️ Attractions")
-try:
-    with st.spinner("Fetching attractions..."):
-        logger.debug(f"Fetching attractions for {destination}")
-        index_city = st.session_state.get('index_city', None)
-        if st.session_state.get('rag_index_built', False) and index_city and index_city.lower() == destination.lower():
-            logger.debug("Using RAG index for attractions")
-            attractions = fetch_attractions(destination, k=5)
-        else:
-            logger.debug("Using direct API call for attractions")
-            if st.session_state.get('rag_index_built', False) and index_city:
-                st.warning(
-                    f"A RAG index is built for {index_city}, but your query is for {destination}. "
-                    f"Please build an index for {destination} in the Home page for optimal results."
-                )
-                logger.warning(f"⚠️ RAG index built for {index_city}, but query destination is {destination}")
-            attractions = fetch_attractions(destination)
+if not attractions:
+    logger.warning(f"⚠️ No attractions found for {destination}")
+    st.warning("No attractions found for this location.")
+else:
+    placeholder_image = "https://via.placeholder.com/250x150?text=No+Image+Available"
+    for i, att in enumerate(attractions[:6], start=1):
+        col = cols[i % 2]
+        with col:
+            with st.container():
+                st.markdown(f"#### {i}. {att['name']}")
+                st.caption(f"⭐ {att.get('rating', 'N/A')} | {att.get('reviews', 'N/A')} reviews")
+                st.write(att.get("category", ""))
+                image_url = att.get("photo", placeholder_image)
+                try:
+                    # Use HTML to apply custom CSS class
+                    st.markdown(
+                        f'<div class="stImage"><img src="{image_url}" class="attraction-image" alt="{att["name"]}"></div>',
+                        unsafe_allow_html=True
+                    )
+                    logger.info(f"✅ Rendered image for attraction {att['name']}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to render image for {att['name']}: {e}")
+                    st.warning(f"Could not load image for {att['name']}")
+                if att.get("link"):
+                    st.markdown(f"[View on TripAdvisor]({att['link']})")
+                logger.debug(f"Rendered attraction {i}: {att['name']}")
+    logger.info("✅ Attractions section rendered")
 
-        if attractions:
-            cols = st.columns(3)  # Responsive grid with 3 columns
-            placeholder_image = "https://via.placeholder.com/250x150?text=No+Image+Available"
-            for idx, attraction in enumerate(attractions[:6]):  # Limit to 6 attractions
-                with cols[idx % 3]:
-                    logger.debug(f"Rendering attraction: {attraction.get('name', 'Unknown')}")
-                    st.markdown(f"**{attraction.get('name', 'Unknown Attraction')}**")
-                    image_url = attraction.get('image_url', placeholder_image)
-                    try:
-                        st.image(
-                            image_url,
-                            caption=attraction.get('name', 'Attraction'),
-                            width='content',  # Replaced use_container_width=False
-                            output_format="auto",
-                            clamp=True,
-                            channels="RGB",
-                            extra_class="attraction-image"
-                        )
-                        logger.info(f"✅ Rendered image for {attraction.get('name')}")
-                    except Exception as e:
-                        logger.error(f"❌ Failed to render image for {attraction.get('name')}: {e}")
-                        st.warning(f"Could not load image for {attraction.get('name', 'this attraction')}")
-                    st.write(attraction.get('description', 'No description available'))
-                    st.markdown("---")
-            logger.info("✅ Attractions section rendered")
-        else:
-            st.warning(f"No attractions found for {destination}. Try building a RAG index in the Home page.")
-            logger.warning(f"⚠️ No attractions found for {destination}")
-except Exception as e:
-    logger.error(f"❌ Error fetching attractions: {e}")
-    st.error(f"Could not fetch attractions: {e}")
+st.divider()
 
 # Navigation to Itinerary Generator
 st.markdown("### 🧳 Ready to Generate Your Itinerary?")
