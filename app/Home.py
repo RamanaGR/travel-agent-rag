@@ -34,11 +34,11 @@ try:
         css_content = f.read()
     css_content += """
     .example-card {
-        padding: 6px 10px;                     /* Less padding for tighter look */
+        padding: 3px 5px;                     /* Less padding for tighter look */
         border: 1px solid #dcdcdc;             /* Softer border */
-        border-radius: 6px;                    /* Slightly smaller corners */
+        border-radius: 3px;                    /* Slightly smaller corners */
         background-color: #fafafa;             /* Light gray background */
-        margin-bottom: 6px;                    /* Reduced vertical spacing */
+        margin-bottom: 3px;                    /* Reduced vertical spacing */
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);/* Subtle shadow */
         transition: all 0.2s ease-in-out;      /* Smooth hover transition */
     }
@@ -46,7 +46,7 @@ try:
         box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Slight pop on hover */
     }
     .example-card span.keyword {
-        font-weight: 600;
+        font-weight: 300;
         color: #007bff;
     }
 
@@ -100,11 +100,11 @@ try:
     st.sidebar.image("app/assets/img.png", width='stretch')
     st.sidebar.markdown("### ✈️ AI Travel Planner")
     st.sidebar.caption("Personalized itineraries using Generative AI")
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🧭 Navigation")
-    st.sidebar.page_link("Home.py", label="🏠 Home")
-    st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
-    st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+    # st.sidebar.markdown("---")
+    # st.sidebar.subheader("🧭 Navigation")
+    # st.sidebar.page_link("Home.py", label="🏠 Home")
+    # st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
+    # st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
     logger.info("✅ Sidebar rendered successfully")
 except Exception as e:
     logger.error(f"❌ Failed to render sidebar: {e}")

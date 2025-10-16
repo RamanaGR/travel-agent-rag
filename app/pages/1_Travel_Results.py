@@ -77,11 +77,11 @@ try:
     st.sidebar.image("app/assets/img.png", width='stretch')
     st.sidebar.markdown("### ✈️ AI Travel Planner")
     st.sidebar.caption("Personalized itineraries using Generative AI")
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🧭 Navigation")
-    st.sidebar.page_link("Home.py", label="🏠 Home")
-    st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
-    st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+    # st.sidebar.markdown("---")
+    # st.sidebar.subheader("🧭 Navigation")
+    # st.sidebar.page_link("Home.py", label="🏠 Home")
+    # st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
+    # st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
     logger.info("✅ Sidebar rendered successfully")
 except Exception as e:
     logger.error(f"❌ Failed to render sidebar: {e}")
@@ -132,7 +132,7 @@ try:
         index_city = st.session_state.get('index_city', None)
         if st.session_state.get('rag_index_built', False) and index_city and index_city.lower() == destination.lower():
             logger.debug("Using RAG index for attractions")
-            attractions = search_attractions(destination, k=5)
+            attractions = fetch_attractions(destination, k=5)
         else:
             logger.debug("Using direct API call for attractions")
             if st.session_state.get('rag_index_built', False) and index_city:

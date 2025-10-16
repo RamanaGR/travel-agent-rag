@@ -176,7 +176,7 @@ def find_first_numeric_geoid(data):
 def fetch_attractions(city: str, limit: int = 10):
     """Fetch and cache top attractions for a given city."""
     logger.info(f"⚡ Fetching attractions for {city}")
-    cache = _load_cache(CACHE_FILE)
+    cache = {}#_load_cache(CACHE_FILE)
     if city in cache:
         logger.info(f"✅ Using cached attractions for {city}")
         return cache[city]
@@ -229,9 +229,9 @@ def fetch_attractions(city: str, limit: int = 10):
             attractions = attractions[:limit]
 
         logger.info(f"🆕 New city detected: {city}. Caching data.")
-        updated_cache = _load_cache(CACHE_FILE)
-        updated_cache[city] = attractions
-        _save_cache(CACHE_FILE, updated_cache)
+        # updated_cache = _load_cache(CACHE_FILE)
+        # updated_cache[city] = attractions
+        # _save_cache(CACHE_FILE, updated_cache)
 
         logger.info(f"✅ Fetched and cached {len(attractions)} attractions for {city}")
         return attractions

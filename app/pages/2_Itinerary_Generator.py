@@ -52,16 +52,16 @@ except Exception as e:
     raise
 
 # Sidebar navigation
-try:
-    logger.debug("Rendering sidebar navigation")
-    st.sidebar.subheader("Navigation")
-    st.sidebar.page_link("Home.py", label="🏠 Home")
-    st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
-    st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
-    logger.info("✅ Sidebar navigation rendered")
-except Exception as e:
-    logger.error(f"❌ Failed to render sidebar: {e}")
-    st.error(f"Sidebar rendering error: {e}")
+# try:
+#     logger.debug("Rendering sidebar navigation")
+#     st.sidebar.subheader("Navigation")
+#     st.sidebar.page_link("Home.py", label="🏠 Home")
+#     st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
+#     st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+#     logger.info("✅ Sidebar navigation rendered")
+# except Exception as e:
+#     logger.error(f"❌ Failed to render sidebar: {e}")
+#     st.error(f"Sidebar rendering error: {e}")
 
 # --- Verify context ---
 logger.debug("Checking session state for required keys")
@@ -285,7 +285,7 @@ for day_index, day_plan in enumerate(day_plans):
     # Title with date and daily spend
     st.subheader(f"{day_plan.get('day_title', f'Day {day_index + 1}')}")
     st.markdown(
-        f"🗓️ **Date:** {day_date_str} | 💰 **Daily Spend:** ${day_plan.get('daily_spend', 0.0):.2f}") # | 🌤 **Weather:** {weather_info}")
+        f"🗓️ **Date:** {day_date_str} | 💰 **Daily Spend:** ${day_plan.get('daily_spend', 0.0):.2f} | 🌤 **Weather:** {weather_info}")
     logger.debug(f"Rendered Day {day_index + 1} header")
 
     # Display activities
