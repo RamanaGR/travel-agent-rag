@@ -34,29 +34,37 @@ try:
         css_content = f.read()
     css_content += """
     .example-card {
-        padding: 10px;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        background-color: #f9f9f9;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        padding: 6px 10px;                     /* Less padding for tighter look */
+        border: 1px solid #dcdcdc;             /* Softer border */
+        border-radius: 6px;                    /* Slightly smaller corners */
+        background-color: #fafafa;             /* Light gray background */
+        margin-bottom: 6px;                    /* Reduced vertical spacing */
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);/* Subtle shadow */
+        transition: all 0.2s ease-in-out;      /* Smooth hover transition */
+    }
+    .example-card:hover {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Slight pop on hover */
     }
     .example-card span.keyword {
         font-weight: 600;
         color: #007bff;
     }
-    /* Style for city input box in sidebar */
-    div[data-testid="stTextInput"] input[placeholder="Enter City for Index Build"] {
-        border: 2px solid #007bff;
-        border-radius: 4px;
-        padding: 8px;
-        transition: border-color 0.3s ease;
+
+    /* Make sidebar text input clearly visible */
+    section[data-testid="stSidebar"] input[type="text"] {
+        border: 1.2px solid #4A90E2 !important;
+        border-radius: 6px !important;
+        padding: 5px 8px !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
-    div[data-testid="stTextInput"] input[placeholder="Enter City for Index Build"]:focus {
-        border-color: #005bb5;
-        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    section[data-testid="stSidebar"] input[type="text"]:focus {
+        border-color: #2E7D32 !important;
+        box-shadow: 0 0 4px rgba(46, 125, 50, 0.4);
     }
     """
+
     st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
     logger.info("✅ CSS loaded and injected successfully")
 except Exception as e:
