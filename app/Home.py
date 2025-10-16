@@ -1,9 +1,8 @@
 import os
 import sys
 import streamlit as st
-from datetime import datetime, date as date_obj
+from datetime import datetime, date as date_obj, timedelta
 import logging
-from datetime import timedelta
 
 # Configure logging
 logging.basicConfig(
@@ -33,7 +32,6 @@ try:
     logger.debug("Loading CSS file")
     with open(css_path, 'r') as f:
         css_content = f.read()
-    # Append custom CSS for examples section
     css_content += """
     .example-card {
         padding: 10px;
@@ -47,11 +45,19 @@ try:
         font-weight: 600;
         color: #007bff;
     }
+    /* Style for city input box in sidebar */
+    div[data-testid="stTextInput"] input[placeholder="Enter City for Index Build"] {
+        border: 2px solid #007bff;
+        border-radius: 4px;
+        padding: 8px;
+        transition: border-color 0.3s ease;
+    }
+    div[data-testid="stTextInput"] input[placeholder="Enter City for Index Build"]:focus {
+        border-color: #005bb5;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    }
     """
-    st.markdown(
-        f"<style>{css_content}</style>",
-        unsafe_allow_html=True
-    )
+    st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
     logger.info("✅ CSS loaded and injected successfully")
 except Exception as e:
     logger.error(f"❌ Failed to load or inject CSS: {e}")
@@ -77,11 +83,11 @@ try:
     st.sidebar.image("app/assets/img.png", use_container_width=True)
     st.sidebar.markdown("### ✈️ AI Travel Planner")
     st.sidebar.caption("Personalized itineraries using Generative AI")
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🧭 Navigation")
-    st.sidebar.page_link("Home.py", label="🏠 Home")
-    st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
-    st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
+    # st.sidebar.markdown("---")
+    # st.sidebar.subheader("🧭 Navigation")
+    # st.sidebar.page_link("Home.py", label="🏠 Home")
+    # st.sidebar.page_link("pages/1_Travel_Results.py", label="📍 Travel Results")
+    # st.sidebar.page_link("pages/2_Itinerary_Generator.py", label="🧳 Itinerary Generator")
     logger.info("✅ Sidebar rendered successfully")
 except Exception as e:
     logger.error(f"❌ Failed to render sidebar: {e}")
@@ -102,7 +108,7 @@ if 'rag_index_built' not in st.session_state:
 # City-specific index build
 st.sidebar.markdown("### Build City-Specific Index")
 city_for_index = st.sidebar.text_input("Enter City for Index Build")
-build_index_button = st.sidebar.button("⚙️ Build Attraction Index for City", type="primary", disabled=not city_for_index.strip())
+build_index_button = st.sidebar.button("Build Index", type="primary", disabled=not city_for_index.strip())
 
 def build_rag_index_for_city(city):
     """Fetch attractions for city and build FAISS index."""
@@ -117,9 +123,10 @@ def build_rag_index_for_city(city):
 
         with st.spinner(f"Building vector index for {city} (may take 30-60 seconds)..."):
             logger.debug(f"Building FAISS index for {len(attractions)} attractions")
-            build_embeddings(attractions)  # Assuming build_embeddings can handle list of attractions
+            build_embeddings(attractions)
 
         st.session_state.rag_index_built = True
+        st.session_state.index_city = city
         st.success(f"✅ Attraction Index Built Successfully for {city}! You can now generate itineraries.")
         logger.info(f"✅ RAG index build completed for {city}")
     except Exception as e:
@@ -133,8 +140,9 @@ if build_index_button:
     build_rag_index_for_city(city_for_index)
 
 if st.session_state.rag_index_built:
-    st.sidebar.success("Index Status: Built")
-    logger.debug("RAG index status: Built")
+    city = st.session_state.get('index_city', 'Unknown')
+    st.sidebar.success(f"Index Status: Built for {city}")
+    logger.debug(f"RAG index status: Built for {city}")
 else:
     st.sidebar.warning("Index Status: Not Built (Will use general knowledge)")
     logger.debug("RAG index status: Not Built")
@@ -201,33 +209,91 @@ logger.info("Rendered user input section")
 
 # --- Handle Plan Generation ---
 if generate:
-    logger.info(f"⚡ User submitted query: {user_query}")
+    logger.info(f"⚡ User submitted query: '{user_query}'")
     if not user_query.strip():
         logger.warning("⚠️ Empty user query provided")
-        st.warning("Please enter a travel request first.")
+        st.error("Please enter a travel request, e.g., 'Plan a 4-day trip to Miami starting tomorrow for under $1000'.")
     else:
         with st.spinner("Analyzing your request..."):
             logger.debug("Extracting entities from user query")
-            details = extract_entities(user_query)
+            try:
+                details = extract_entities(user_query)
+            except Exception as e:
+                logger.error(f"❌ NLP extraction failed: {e}")
+                st.error("Error processing your query. Please try a simpler format, e.g., 'Plan a 4-day trip to Miami starting tomorrow for under $1000'.")
+                st.stop()
             destination = details.get("destination")
             budget = details.get("budget")
             duration = details.get("duration")
             date = details.get("date")
             logger.info(f"Extracted details: destination={destination}, budget={budget}, duration={duration}, date={date}")
 
-            # Validate date for weather API (within 5 days)
-            try:
-                parsed_date = datetime.strptime(date, '%Y-%m-%d').date()
-                today = date_obj.today()
-                if parsed_date > today + timedelta(days=5):
-                    logger.warning(f"⚠️ Requested date {date} is beyond 5-day weather forecast limit")
-                    st.warning("Weather forecasts are only available for the next 5 days. Please choose a date between {} and {}.".format(
-                        today.strftime('%Y-%m-%d'), (today + timedelta(days=5)).strftime('%Y-%m-%d')))
+            # Input validation
+            validation_errors = []
+            today = date_obj.today()
+            max_date = today + timedelta(days=5)
+
+            # Destination validation
+            if not destination:
+                validation_errors.append("No destination found. Please specify a city, e.g., 'Miami' or 'Paris'.")
+                logger.warning("⚠️ Validation failed: No destination extracted")
+
+            # Duration validation
+            if not duration or duration < 1:
+                validation_errors.append("Invalid duration. Please specify a duration like '4-day' or 'weekend'.")
+                logger.warning(f"⚠️ Validation failed: Invalid duration ({duration})")
+
+            # Budget validation
+            if not budget or budget < 100:
+                validation_errors.append("Invalid budget. Please specify a budget like '$1000' or 'under $1500'.")
+                logger.warning(f"⚠️ Validation failed: Invalid budget ({budget})")
+
+            # Date validation
+            if not date:
+                logger.warning("⚠️ No date extracted, defaulting to tomorrow")
+                date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+                validation_errors.append(
+                    f"No date provided. Defaulting to tomorrow ({date}). Please specify a date like 'tomorrow' or '2025-10-17'."
+                )
+            else:
+                try:
+                    parsed_date = datetime.strptime(date, '%Y-%m-%d').date()
+                    if parsed_date < today:
+                        validation_errors.append(
+                            f"Date {date} is in the past. Please choose a date between {today.strftime('%Y-%m-%d')} and {max_date.strftime('%Y-%m-%d')}."
+                        )
+                        logger.warning(f"⚠️ Validation failed: Date {date} is in the past")
+                    elif parsed_date > max_date:
+                        logger.warning(f"⚠️ Date {date} is beyond 5-day forecast, defaulting to tomorrow")
+                        validation_errors.append(
+                            f"Date {date} is beyond the 5-day weather forecast limit. Defaulting to tomorrow ({today + timedelta(days=1):%Y-%m-%d})."
+                        )
+                        date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+                except ValueError:
+                    logger.warning(f"⚠️ Invalid date format: {date}, defaulting to tomorrow")
+                    validation_errors.append(
+                        f"Invalid date format: '{date}'. Defaulting to tomorrow ({today + timedelta(days=1):%Y-%m-%d}). Please use YYYY-MM-DD or terms like 'tomorrow'."
+                    )
+                    date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+
+            # Check RAG index compatibility
+            if st.session_state.get('rag_index_built', False) and st.session_state.get('index_city', '').lower() != destination.lower():
+                st.warning(
+                    f"A RAG index is built for {st.session_state.index_city}, but your query is for {destination}. "
+                    f"Please build an index for {destination} in the sidebar for optimal results."
+                )
+                logger.warning(f"⚠️ RAG index built for {st.session_state.index_city}, but query destination is {destination}")
+
+            if validation_errors:
+                for error in validation_errors:
+                    st.error(error)
+                st.info("Try an example like: 'Plan a 4-day trip to Miami starting tomorrow for under $1000'.")
+                logger.error(f"❌ Validation failed with errors: {validation_errors}")
+                # Allow proceeding with defaults if only date is invalid
+                if len(validation_errors) == 1 and "date" in validation_errors[0].lower():
+                    logger.info(f"✅ Proceeding with default date: {date}")
+                else:
                     st.stop()
-            except ValueError:
-                logger.warning(f"⚠️ Invalid date format in query: {date}")
-                st.warning("Could not parse the date in your query. Please use YYYY-MM-DD format or terms like 'tomorrow' or 'this weekend'.")
-                st.stop()
 
             st.session_state.update({
                 "query": user_query,
@@ -239,7 +305,8 @@ if generate:
             logger.debug("Updated session state with extracted details")
 
         st.success(
-            f"✅ Destination: **{destination}** | Budget: **${budget}** | Duration: **{duration} days** | Date: **{date}**")
+            f"✅ Destination: **{destination}** | Budget: **${budget}** | Duration: **{duration} days** | Date: **{date}**"
+        )
         st.balloons()
         logger.info("✅ Plan details rendered, switching to Travel Results page")
         st.switch_page("pages/1_Travel_Results.py")
