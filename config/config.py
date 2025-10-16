@@ -12,7 +12,7 @@ OPENWEATHER_KEY = os.getenv("OPENWEATHER_KEY")
 # 🧠 RAG Configuration
 # -------------------------------
 # Whether to use offline mode (no FAISS writes or heavy API calls)
-USE_OFFLINE_MODE = True  # ✅ Keep True for Streamlit Cloud
+USE_OFFLINE_MODE = False  # ✅ Keep True for Streamlit Cloud
 
 # -------------------------------
 # 📁 Data and File Paths
@@ -20,7 +20,7 @@ USE_OFFLINE_MODE = True  # ✅ Keep True for Streamlit Cloud
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 # --- COMMON DATA FILES ---
-CACHE_FILE = os.path.join(DATA_DIR, "attractions_v1.json")
+CACHE_FILE = os.path.join(DATA_DIR, "attractions.json")
 COUNTER_FILE = os.path.join(DATA_DIR, "attractions_counter.txt")
 GEOID_CACHE_FILE = os.path.join(DATA_DIR, "geoids.json")
 

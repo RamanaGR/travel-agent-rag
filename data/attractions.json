@@ -1,1 +1,738 @@
-{}
+{
+    "Miami": [
+        {
+            "name": "1. Bayside Marketplace",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Shopping Malls",
+            "rating": 4.1,
+            "reviews": "13,945",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/13/46/32/80/waterside.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=143763"
+        },
+        {
+            "name": "2. Black Police Precinct and Courthouse Museum",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 History Museums",
+            "rating": 5.0,
+            "reviews": "319",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/29/a9/e2/c4/black-police-precinct.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=7812544"
+        },
+        {
+            "name": "3. Wynwood",
+            "description": "N/A",
+            "category": "Neighborhoods",
+            "rating": 4.5,
+            "reviews": "2,178",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/41/53/ea/artists-frequently-create.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=288502"
+        },
+        {
+            "name": "4. Wynwood Walls",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Art Museums",
+            "rating": 4.6,
+            "reviews": "9,517",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/cd/05/41/20190602-125404-largejpg.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=6373552"
+        },
+        {
+            "name": "5. Kaseya Center",
+            "description": "N/A",
+            "category": "Arenas & Stadiums",
+            "rating": 4.6,
+            "reviews": "5,745",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/05/ae/5d/5b/aa.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=147158"
+        },
+        {
+            "name": "6. Miami Design District",
+            "description": "N/A",
+            "category": "Art Galleries \u2022 Neighborhoods",
+            "rating": 4.3,
+            "reviews": "1,494",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0a/4e/88/99/louis-vuitton-at-night.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=267232"
+        },
+        {
+            "name": "7. LoanDepot Park",
+            "description": "N/A",
+            "category": "Arenas & Stadiums",
+            "rating": 4.4,
+            "reviews": "2,005",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/25/50/8f/cf/loandepot-park-features.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=2651111"
+        },
+        {
+            "name": "8. Coconut Grove",
+            "description": "N/A",
+            "category": "Neighborhoods",
+            "rating": 4.2,
+            "reviews": "872",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0b/63/06/9a/view-from-the-sonesta.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=4544507"
+        },
+        {
+            "name": "9. Deering Estate",
+            "description": "N/A",
+            "category": "Speciality Museums \u2022 Historic Sites",
+            "rating": 4.3,
+            "reviews": "388",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/06/5e/62/df/deering-estate-at-cutler.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=298695"
+        },
+        {
+            "name": "10. Little Havana",
+            "description": "N/A",
+            "category": "Neighborhoods",
+            "rating": 3.8,
+            "reviews": "3,037",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1c/98/04/f5/divertente-e-gioiosa.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=107606"
+        }
+    ],
+    "Boston": [
+        {
+            "name": "1. Freedom Trail",
+            "description": "N/A",
+            "category": "Historic Walking Areas",
+            "rating": 4.6,
+            "reviews": "17,970",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0b/e7/9a/ed/photo0jpg.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=104604"
+        },
+        {
+            "name": "2. Fenway Park",
+            "description": "N/A",
+            "category": "Arenas & Stadiums",
+            "rating": 4.7,
+            "reviews": "17,774",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/18/cc/dc/0b/the-old-ball-game-at.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=105250"
+        },
+        {
+            "name": "3. PhotoWalks Tours",
+            "description": "N/A",
+            "category": "Historic Walking Areas \u2022 Historical & Heritage Tours",
+            "rating": 4.9,
+            "reviews": "446",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2a/18/e9/99/acorn-st-most-photographed.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=1402264"
+        },
+        {
+            "name": "4. Bites of Boston Food Tours",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 Cultural Tours",
+            "rating": 4.8,
+            "reviews": "455",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2b/2f/7f/60/good-times-with-cocktails.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=2253660"
+        },
+        {
+            "name": "5. Boston Pizza Tours",
+            "description": "N/A",
+            "category": "Bar, Club & Pub Tours \u2022 Historic Sites",
+            "rating": 4.7,
+            "reviews": "886",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0d/5f/af/69/wood-fired-brick-oven.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=3222705"
+        },
+        {
+            "name": "6. North End",
+            "description": "N/A",
+            "category": "Neighborhoods",
+            "rating": 4.7,
+            "reviews": "7,262",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0c/ef/48/4c/up-salem-street.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=103113"
+        },
+        {
+            "name": "7. Boston Public Library",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Libraries",
+            "rating": 4.7,
+            "reviews": "4,174",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-s/02/3d/8e/97/boston-public-library.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=104816"
+        },
+        {
+            "name": "8. Boston Tea Party Ships & Museum",
+            "description": "N/A",
+            "category": "Ships \u2022 History Museums",
+            "rating": 4.6,
+            "reviews": "7,240",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1c/7f/97/fb/revolt-like-its-1773.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=103645"
+        },
+        {
+            "name": "9. New England Holocaust Memorial",
+            "description": "N/A",
+            "category": "Monuments & Statues",
+            "rating": 4.6,
+            "reviews": "2,560",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0b/65/a0/7d/local.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=104794"
+        },
+        {
+            "name": "10. USS Constitution",
+            "description": "N/A",
+            "category": "Ships",
+            "rating": 4.5,
+            "reviews": "2,511",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/11/4c/b8/6c/uss-constitution-side.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=6825959"
+        }
+    ],
+    "Chicago": [
+        {
+            "name": "1. Millennium Park",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Parks",
+            "rating": 4.7,
+            "reviews": "25,260",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/14/b4/91/a3/the-bean.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=278811"
+        },
+        {
+            "name": "2. The Magnificent Mile",
+            "description": "N/A",
+            "category": "Neighborhoods \u2022 Points of Interest & Landmarks",
+            "rating": 4.5,
+            "reviews": "15,838",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/03/e2/da/9e/north-michigan-avenue.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=109779"
+        },
+        {
+            "name": "3. Cloud Gate",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Monuments & Statues",
+            "rating": 4.7,
+            "reviews": "18,316",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1b/8b/29/1e/one-of-our-favourite.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=1134861"
+        },
+        {
+            "name": "4. Skydeck Chicago - Willis Tower",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Architectural Buildings",
+            "rating": 4.3,
+            "reviews": "18,038",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0d/ab/dd/ed/vista-su-chicago.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=103238"
+        },
+        {
+            "name": "5. Chicago Skyline",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks",
+            "rating": 4.8,
+            "reviews": "752",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/e0/3f/dc/chicago-skyline-4.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=8787137"
+        },
+        {
+            "name": "6. Garfield Park Conservatory",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 Gardens",
+            "rating": 4.7,
+            "reviews": "878",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1b/c4/d1/f4/the-palm-house-at-65.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=560679"
+        },
+        {
+            "name": "7. Chicago Riverwalk",
+            "description": "N/A",
+            "category": "Historic Walking Areas",
+            "rating": 4.6,
+            "reviews": "3,172",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/c8/77/4e/bars-attractions-art.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=3743225"
+        },
+        {
+            "name": "8. Wrigley Field",
+            "description": "N/A",
+            "category": "Arenas & Stadiums",
+            "rating": 4.7,
+            "reviews": "10,016",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/41/2e/13/photo0jpg.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=104004"
+        },
+        {
+            "name": "9. Holy Name Cathedral",
+            "description": "N/A",
+            "category": "Architectural Buildings \u2022 Religious Sites",
+            "rating": 4.7,
+            "reviews": "1,125",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0b/76/bb/c9/les-voutes-et-lorgue.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=561081"
+        },
+        {
+            "name": "10. Chicago Cultural Center",
+            "description": "N/A",
+            "category": "Architectural Buildings \u2022 Civic Centres",
+            "rating": 4.6,
+            "reviews": "3,089",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/14/b8/24/4e/inside.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=103785"
+        }
+    ],
+    "Las Vegas": [
+        {
+            "name": "1. Fountains of Bellagio",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Fountains",
+            "rating": 4.7,
+            "reviews": "92,347",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/11/13/7f/fontaines-du-bellagio.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=127003"
+        },
+        {
+            "name": "2. High Roller",
+            "description": "N/A",
+            "category": "Observation Decks & Towers",
+            "rating": 4.5,
+            "reviews": "26,108",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/12/ae/2a/f9/high-roller.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=6509306"
+        },
+        {
+            "name": "3. Stratosphere Tower",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Observation Decks & Towers",
+            "rating": 4.3,
+            "reviews": "13,549",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/7e/88/6d/stratosphere-tower.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=104050"
+        },
+        {
+            "name": "4. Allegiant Stadium Tours",
+            "description": "N/A",
+            "category": "Arenas & Stadiums",
+            "rating": 4.9,
+            "reviews": "567",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1d/3b/0b/f6/led-by-expert-hosts-this.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=23473814"
+        },
+        {
+            "name": "5. Novi Adventure Tours",
+            "description": "N/A",
+            "category": "State Parks \u2022 National Parks",
+            "rating": 5.0,
+            "reviews": "183",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/30/73/db/8c/at-red-canyon-with-a.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=7297052"
+        },
+        {
+            "name": "6. Mr. Las Vegas Tours",
+            "description": "N/A",
+            "category": "Historical & Heritage Tours \u2022 Bridges",
+            "rating": 4.9,
+            "reviews": "1,842",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2d/2b/72/32/by-pass-bridge.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=13189776"
+        },
+        {
+            "name": "7. Vegas Superkarts - Outdoor Go Kart",
+            "description": "N/A",
+            "category": "Adrenaline & Extreme Tours \u2022 Auto Racing Tracks",
+            "rating": 4.9,
+            "reviews": "215",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/84/8c/d0/outdoor-go-kart-racing.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=15750023"
+        },
+        {
+            "name": "8. The Las Vegas Strip",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Historic Walking Areas",
+            "rating": 4.4,
+            "reviews": "35,126",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/01/00/2b/the-strip.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=126583"
+        },
+        {
+            "name": "9. Fremont Street Experience",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks",
+            "rating": 4.2,
+            "reviews": "45,481",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/db/6f/80/see-the-world-s-biggest.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=102514"
+        },
+        {
+            "name": "10. Speed Vegas",
+            "description": "N/A",
+            "category": "Auto Racing Tracks",
+            "rating": 4.9,
+            "reviews": "2,520",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/30/fe/ff/2e/drive-a-lamborghini-ferrari.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=10187865"
+        }
+    ],
+    "Paris": [
+        {
+            "name": "1. Pont Alexandre III",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Bridges",
+            "rating": 4.6,
+            "reviews": "17,473",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/c2/1c/cf/pont-alexandre-iii.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=265614"
+        },
+        {
+            "name": "2. Le Marais",
+            "description": "N/A",
+            "category": "Neighborhoods",
+            "rating": 4.6,
+            "reviews": "13,016",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/05/21/02/95/le-marais.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=292257"
+        },
+        {
+            "name": "3. Arc de Triomphe",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 Architectural Buildings",
+            "rating": 4.5,
+            "reviews": "46,398",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0e/53/47/52/arc-de-triomphe.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=188709"
+        },
+        {
+            "name": "4. Basilique du Sacre-Coeur de Montmartre",
+            "description": "N/A",
+            "category": "Churches & Cathedrals",
+            "rating": 4.5,
+            "reviews": "39,657",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/06/83/34/41/basilica-del-sagrado.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=190685"
+        },
+        {
+            "name": "5. Montmartre",
+            "description": "N/A",
+            "category": "Neighborhoods \u2022 Historic Walking Areas",
+            "rating": 4.5,
+            "reviews": "20,505",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/04/0c/65/6e/caption.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=189284"
+        },
+        {
+            "name": "6. Cath\u00e9drale Notre-Dame de Paris",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 Architectural Buildings",
+            "rating": 4.6,
+            "reviews": "72,138",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0d/8d/a4/84/the-amazingly-detailed.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=188679"
+        },
+        {
+            "name": "7. Eiffel Tower",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Observation Decks & Towers",
+            "rating": 4.6,
+            "reviews": "143,654",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/9e/7f/9d/eiffeltoren.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=188151"
+        },
+        {
+            "name": "8. Palais Garnier",
+            "description": "N/A",
+            "category": "Architectural Buildings \u2022 Theaters",
+            "rating": 4.7,
+            "reviews": "20,167",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/50/c6/dd/palais-garnier.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=190204"
+        },
+        {
+            "name": "9. Champs-Elysees",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Historic Walking Areas",
+            "rating": 4.2,
+            "reviews": "21,747",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2a/b0/d1/f8/the-champs-elysees-in.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=209760"
+        },
+        {
+            "name": "10. Louvre Museum",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Architectural Buildings",
+            "rating": 4.6,
+            "reviews": "104,131",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/30/df/da/34/the-glass-pyramid-is.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=188757"
+        }
+    ],
+    "Barcelona": [
+        {
+            "name": "1. Bas\u00edlica de la Sagrada Familia",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Architectural Buildings",
+            "rating": 4.7,
+            "reviews": "167,614",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/18/56/2a/e7/hay-construcciones-monumentale.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=190166"
+        },
+        {
+            "name": "2. Gothic Quarter (Barri Gotic)",
+            "description": "N/A",
+            "category": "Neighborhoods \u2022 Historic Walking Areas",
+            "rating": 4.6,
+            "reviews": "40,583",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/4a/a9/05/photo0jpg.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=190162"
+        },
+        {
+            "name": "3. Palace of Catalan Music",
+            "description": "N/A",
+            "category": "Architectural Buildings \u2022 Theaters",
+            "rating": 4.7,
+            "reviews": "19,151",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/8a/ea/9d/il-bellissimo-balcone.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=190824"
+        },
+        {
+            "name": "4. Bas\u00edlica de Santa Maria del Mar",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 Architectural Buildings",
+            "rating": 4.6,
+            "reviews": "14,037",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0a/eb/14/0d/photo7jpg.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=246171"
+        },
+        {
+            "name": "5. Passeig de Gracia",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Scenic Walking Areas",
+            "rating": 4.5,
+            "reviews": "14,011",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/08/c8/1d/b1/passeig-de-gracia.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=254723"
+        },
+        {
+            "name": "6. Casa Batll\u00f3",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Architectural Buildings",
+            "rating": 4.6,
+            "reviews": "59,249",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/daodao/photo-o/19/ac/b2/a5/caption.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=191052"
+        },
+        {
+            "name": "7. Casa Mil\u00e0 - La Pedrera",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Architectural Buildings",
+            "rating": 4.4,
+            "reviews": "24,152",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/03/9d/7f/3b/the-roof.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=190629"
+        },
+        {
+            "name": "8. The Magic Fountain",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Fountains",
+            "rating": 4.5,
+            "reviews": "29,625",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/e3/00/e9/photo0jpg.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=501696"
+        },
+        {
+            "name": "9. Barcelona Slow Travel",
+            "description": "N/A",
+            "category": "Farms \u2022 Cooking Classes",
+            "rating": 5.0,
+            "reviews": "416",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0e/e1/0f/3d/take-the-time-to-enjoy.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=6215809"
+        },
+        {
+            "name": "10. Spotify Camp Nou",
+            "description": "N/A",
+            "category": "Arenas & Stadiums",
+            "rating": 4.4,
+            "reviews": "40,365",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/10/ac/83/af/photo4jpg.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=271009"
+        }
+    ],
+    "Bangkok": [
+        {
+            "name": "1. Wat Phra Chetuphon",
+            "description": "N/A",
+            "category": "Points of Interest & Landmarks \u2022 Religious Sites",
+            "rating": 4.6,
+            "reviews": "51,457",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0e/13/95/42/roofs-giving-a-unique.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=311043"
+        },
+        {
+            "name": "2. Temple Of Dawn (Wat Arun)",
+            "description": "N/A",
+            "category": "Religious Sites \u2022 Churches & Cathedrals",
+            "rating": 4.4,
+            "reviews": "21,497",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/ee/e6/a5/wat-arun-is-an-ancient.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=317504"
+        },
+        {
+            "name": "3. Temple of the Emerald Buddha (Wat Phra Kaew)",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.4,
+            "reviews": "16,171",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/16/f7/25/18/caption.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=311044"
+        },
+        {
+            "name": "4. Jim Thompson House",
+            "description": "N/A",
+            "category": "Speciality Museums \u2022 Architectural Buildings",
+            "rating": 4.3,
+            "reviews": "14,558",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/18/f3/f2/f8/outside.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=447276"
+        },
+        {
+            "name": "5. The Grand Palace",
+            "description": "N/A",
+            "category": "Historic Sites",
+            "rating": 4.2,
+            "reviews": "36,021",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/16/e3/cc/e6/photo2jpg.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=317603"
+        },
+        {
+            "name": "6. Rajadamnern Muay Thai Stadium",
+            "description": "N/A",
+            "category": "Arenas & Stadiums",
+            "rating": 4.9,
+            "reviews": "1,564",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2e/d8/f4/17/muay-thai-boxing-tickets.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=24105973"
+        },
+        {
+            "name": "7. Nikki Tour Guide",
+            "description": "N/A",
+            "category": "Cultural Tours \u2022 Ancient Ruins",
+            "rating": 5.0,
+            "reviews": "392",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/c4/c3/d2/families.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=12598888"
+        },
+        {
+            "name": "8. E-Gokart by Monowheel",
+            "description": "N/A",
+            "category": "Auto Racing Tracks \u2022 Game & Entertainment Centers",
+            "rating": 4.9,
+            "reviews": "93",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/24/35/30/7f/stunning-momentum-of.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=24124241"
+        },
+        {
+            "name": "9. Wat Paknam Phasi Charoen",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.6,
+            "reviews": "604",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/16/a9/2d/4f/caption.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=7913913"
+        },
+        {
+            "name": "10. The Chakri Group (Phra Thinang Chakri Maha Prasat)",
+            "description": "N/A",
+            "category": "Historic Sites \u2022 Castles",
+            "rating": 4.6,
+            "reviews": "362",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/12/74/e6/f4/the-chakri-group-phra.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=554203"
+        }
+    ],
+    "Manali": [
+        {
+            "name": "1. Manikaran Gurudwara",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.4,
+            "reviews": "1,460",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/3a/d3/d3/manikaran-sahib.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=1590585"
+        },
+        {
+            "name": "2. Hidimba Devi Temple",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.3,
+            "reviews": "3,856",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/12/d5/1e/f6/hidimba-temple.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=668389"
+        },
+        {
+            "name": "3. Gulaba",
+            "description": "N/A",
+            "category": "Lookouts",
+            "rating": 4.1,
+            "reviews": "600",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0d/38/d6/05/gulaba.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=2514443"
+        },
+        {
+            "name": "4. Manu Temple",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.0,
+            "reviews": "379",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/16/17/8b/45/manu-temple.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=3912843"
+        },
+        {
+            "name": "5. Gadhan Thekchhokling Gompa Monastery",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.1,
+            "reviews": "138",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0a/59/1b/a3/gadhan-thekchhokling.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=3202928"
+        },
+        {
+            "name": "6. Siyali Mahadev Temple",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.2,
+            "reviews": "66",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/09/00/a4/9a/siyali-mahadev-temple.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=8536935"
+        },
+        {
+            "name": "7. Shri Anjani Mahadev Mandir",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.5,
+            "reviews": "32",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/f8/22/b8/anjani-mahadev.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=11694361"
+        },
+        {
+            "name": "8. Gayatri Temple",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.1,
+            "reviews": "37",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0a/19/79/f7/gayatri-temple.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=9594074"
+        },
+        {
+            "name": "9. Ghatotkach Tree Templ",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 3.8,
+            "reviews": "33",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/23/b2/dc/ee/caption.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=14151728"
+        },
+        {
+            "name": "10. Jamula Temple",
+            "description": "N/A",
+            "category": "Religious Sites",
+            "rating": 4.0,
+            "reviews": "29",
+            "photo": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/08/e5/a1/d0/jamula-temple.jpg?w=400&h=300&s=1",
+            "link": "https://www.tripadvisor.com/AppDetail?contentType=attraction&contentId=3218036"
+        }
+    ]
+}
