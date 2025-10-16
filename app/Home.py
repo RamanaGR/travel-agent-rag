@@ -52,19 +52,19 @@ try:
 
     /* Make sidebar text input clearly visible */
     section[data-testid="stSidebar"] input[type="text"] {
-        border: 1.5px solid #4A90E2 !important;
-        border-radius: 8px !important;
-        padding: 6px 10px !important;
+        border: 1.2px solid #4A90E2 !important;
+        border-radius: 6px !important;
+        padding: 5px 8px !important;
         background-color: #ffffff !important;
         color: #000000 !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
     section[data-testid="stSidebar"] input[type="text"]:focus {
         border-color: #2E7D32 !important;
-        box-shadow: 0 0 5px rgba(46, 125, 50, 0.5);
+        box-shadow: 0 0 4px rgba(46, 125, 50, 0.4);
     }
-  
     """
+
     st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
     logger.info("✅ CSS loaded and injected successfully")
 except Exception as e:
@@ -97,7 +97,7 @@ if 'rag_index_built' not in st.session_state:
 # Sidebar setup
 try:
     logger.debug("Rendering sidebar")
-    st.sidebar.image("app/assets/img.png", use_container_width=True)
+    st.sidebar.image("app/assets/img.png", width='stretch')
     st.sidebar.markdown("### ✈️ AI Travel Planner")
     st.sidebar.caption("Personalized itineraries using Generative AI")
     st.sidebar.markdown("---")

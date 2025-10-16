@@ -74,7 +74,7 @@ except Exception as e:
 # Sidebar
 try:
     logger.debug("Rendering sidebar")
-    st.sidebar.image("app/assets/img.png", use_container_width=True)
+    st.sidebar.image("app/assets/img.png", width='stretch')
     st.sidebar.markdown("### ✈️ AI Travel Planner")
     st.sidebar.caption("Personalized itineraries using Generative AI")
     st.sidebar.markdown("---")
@@ -112,17 +112,17 @@ try:
     with st.spinner("Fetching weather forecast..."):
         logger.debug(f"Fetching weather for {destination} starting {date}")
         weather_data = get_forecast_summary(destination, date, duration)
-        if weather_data:
+        if weather_data and isinstance(weather_data, list):
             st.write(f"**Weather in {destination} starting {date}:**")
             for day in weather_data:
-                st.write(f"- **{day['date']}**: {day['condition']} | Temp: {day['temp_min']}°C - {day['temp_max']}°C")
+                st.write(f"- **{day.get('date', 'Unknown')}**: {day.get('condition', 'N/A')} | Temp: {day.get('temp_min', 'N/A')}°C - {day.get('temp_max', 'N/A')}°C")
             logger.info("✅ Weather forecast rendered")
         else:
-            st.warning(f"No weather data available for {destination}. Proceeding with general recommendations.")
+            st.warning(f"No weather data available for {destination}. Please check the city name or try again later.")
             logger.warning(f"⚠️ No weather data for {destination}")
 except Exception as e:
     logger.error(f"❌ Error fetching weather: {e}")
-    st.error(f"Could not fetch weather data: {e}")
+    st.warning(f"Could not fetch weather data for {destination}: {e}. Proceeding with general recommendations.")
 
 # Attractions
 st.markdown("### 🏛️ Attractions")
@@ -145,30 +145,26 @@ try:
 
         if attractions:
             cols = st.columns(3)  # Responsive grid with 3 columns
+            placeholder_image = "https://via.placeholder.com/250x150?text=No+Image+Available"
             for idx, attraction in enumerate(attractions[:6]):  # Limit to 6 attractions
                 with cols[idx % 3]:
                     logger.debug(f"Rendering attraction: {attraction.get('name', 'Unknown')}")
                     st.markdown(f"**{attraction.get('name', 'Unknown Attraction')}**")
-                    image_url = attraction.get('image_url', None)
-                    if image_url:
-                        try:
-                            st.image(
-                                image_url,
-                                caption=attraction.get('name', 'Attraction'),
-                                width=250,
-                                use_column_width=False,
-                                output_format="auto",
-                                clamp=True,
-                                channels="RGB",
-                                extra_class="attraction-image"
-                            )
-                            logger.info(f"✅ Rendered image for {attraction.get('name')}")
-                        except Exception as e:
-                            logger.error(f"❌ Failed to render image for {attraction.get('name')}: {e}")
-                            st.warning(f"Could not load image for {attraction.get('name', 'this attraction')}")
-                    else:
-                        st.write("No image available")
-                        logger.warning(f"⚠️ No image URL for {attraction.get('name')}")
+                    image_url = attraction.get('image_url', placeholder_image)
+                    try:
+                        st.image(
+                            image_url,
+                            caption=attraction.get('name', 'Attraction'),
+                            width='content',  # Replaced use_container_width=False
+                            output_format="auto",
+                            clamp=True,
+                            channels="RGB",
+                            extra_class="attraction-image"
+                        )
+                        logger.info(f"✅ Rendered image for {attraction.get('name')}")
+                    except Exception as e:
+                        logger.error(f"❌ Failed to render image for {attraction.get('name')}: {e}")
+                        st.warning(f"Could not load image for {attraction.get('name', 'this attraction')}")
                     st.write(attraction.get('description', 'No description available'))
                     st.markdown("---")
             logger.info("✅ Attractions section rendered")

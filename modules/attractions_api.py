@@ -146,10 +146,6 @@ def get_geo_id(city: str):
         return None
 
 def find_first_numeric_geoid(data):
-    """
-    Recursively searches for the 'geoId' key in a nested dictionary or list
-    and returns the first integer value found. Skips None or non-numeric values.
-    """
     logger.debug("Searching for numeric geoId")
     if isinstance(data, dict):
         if 'geoId' in data:
@@ -203,8 +199,7 @@ def fetch_attractions(city: str, limit: int = 10):
         "sort": "TRAVELER_RANKED",
         "sortOrder": "desc",
         "filters": [
-            {"id": "category", "value": ["47","48","52","40", "59", "49", "57", "20"]},
-            {"id": "rating", "value": ["4.0"]}
+            {"id": "category", "value": ["47","48","52","40", "59", "49", "57", "20"]}
         ],
         "updateToken": ""
     }
@@ -224,7 +219,7 @@ def fetch_attractions(city: str, limit: int = 10):
 
         data = response.json()
         logger.debug(f"API response received for attractions")
-        attractions = parse_attractions_from_response(data)
+        attractions = parse_attractions_from_response(data, limit=limit)
         logger.debug(f"Parsed {len(attractions)} attractions")
 
         if not attractions:
@@ -233,11 +228,10 @@ def fetch_attractions(city: str, limit: int = 10):
         else:
             attractions = attractions[:limit]
 
-        if city not in open(CACHE_FILE).read():
-            logger.info(f"🆕 New city detected: {city}. Caching data.")
-            updated_cache = _load_cache(CACHE_FILE)
-            updated_cache[city] = attractions
-            _save_cache(CACHE_FILE, updated_cache)
+        logger.info(f"🆕 New city detected: {city}. Caching data.")
+        updated_cache = _load_cache(CACHE_FILE)
+        updated_cache[city] = attractions
+        _save_cache(CACHE_FILE, updated_cache)
 
         logger.info(f"✅ Fetched and cached {len(attractions)} attractions for {city}")
         return attractions
@@ -282,11 +276,13 @@ def parse_attractions_from_response(resp_json, limit=10):
 
         category = safe(card, "primaryInfo", "text") or safe(card, "category", "name") or safe(card, "category") or "N/A"
 
-        url_template = safe(card, "cardPhoto", "sizes", "urlTemplate") or safe(card, "cardPhoto", "photo", "url") or safe(card, "photo", "url") or ""
-        if url_template and "{width}" in url_template:
-            photo = url_template.replace("{width}", "400").replace("{height}", "300")
-        else:
-            photo = url_template
+        # Updated image parsing for larger images
+        photo_sizes = safe(card, "cardPhoto", "sizes") or safe(card, "photo", "sizes") or {}
+        photo = photo_sizes.get("large", {}).get("url") or photo_sizes.get("medium", {}).get("url") or photo_sizes.get("small", {}).get("url") or ""
+        if not photo:
+            url_template = safe(card, "cardPhoto", "sizes", "urlTemplate") or safe(card, "cardPhoto", "photo", "url") or safe(card, "photo", "url") or ""
+            if url_template and "{width}" in url_template:
+                photo = url_template.replace("{width}", "400").replace("{height}", "300")
 
         route = safe(card, "cardLink", "route")
         if isinstance(route, dict):
