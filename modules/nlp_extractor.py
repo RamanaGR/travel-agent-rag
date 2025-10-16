@@ -1,15 +1,26 @@
 """
 nlp_extractor.py
-Extracts destination, dates, and budget from natural language queries.
-Uses spaCy + regex.
+Extracts destination, dates, duration, and budget from natural language queries.
+Uses spaCy + regex, aligned with OpenWeatherMap 5-day forecast restriction.
 """
 
 import re
 import spacy
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as date_obj
 import streamlit as st
-from spacy.cli import download
+import logging
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+
+# Create a logger for this module
+logger = logging.getLogger(__name__)
 
 # -----------------------------
 # Load SpaCy model safely
@@ -17,106 +28,147 @@ from spacy.cli import download
 @st.cache_resource
 def load_spacy_model():
     """Load or download SpaCy model once per Streamlit session."""
+    logger.info("⚡ Loading SpaCy model 'en_core_web_sm'")
     try:
-        return spacy.load("en_core_web_sm")
+        nlp = spacy.load("en_core_web_sm")
+        logger.info("✅ SpaCy model loaded successfully")
+        return nlp
     except OSError:
-        from spacy.cli import download
-        download("en_core_web_sm")
-        return spacy.load("en_core_web_sm")
+        logger.warning("⚠️ SpaCy model not found, downloading 'en_core_web_sm'")
+        try:
+            download("en_core_web_sm")
+            nlp = spacy.load("en_core_web_sm")
+            logger.info("✅ SpaCy model downloaded and loaded successfully")
+            return nlp
+        except Exception as e:
+            logger.error(f"❌ Failed to download or load SpaCy model: {e}")
+            raise
 
 nlp = load_spacy_model()
 
-
 def extract_entities(user_input):
     """
-    Extract destination, travel month, duration, and budget from user query.
+    Extract destination, date, duration, and budget from user query.
+    Ensures dates are within OpenWeatherMap's 5-day forecast limit (from today).
+    Returns date in YYYY-MM-DD format.
     """
+    logger.info(f"⚡ Extracting entities from query: '{user_input}'")
     doc = nlp(user_input)
     destination = None
     budget = None
     duration = None
-    month = None
+    date = None
+    today = date_obj.today()
 
     # 1️⃣ Destination (city/country)
+    logger.debug("Extracting destination")
     for ent in doc.ents:
         if ent.label_ == "GPE":
             destination = ent.text
+            logger.info(f"✅ Destination extracted: {destination}")
             break
+    if not destination:
+        logger.warning("⚠️ No destination found in query")
+        destination = None
 
     # 2️⃣ Budget (captures $1000, under 1200 dollars, etc.)
-    budget_match = re.search(r"(?:under|below|less than)?\s*\$?\s?(\d{2,5})", user_input, re.IGNORECASE)
+    logger.debug("Extracting budget")
+    # Stricter regex to match currency-related numbers only
+    budget_match = re.search(r"(?:under|below|less than)?\s*\$?\s*(\d{3,5})\s*(?:dollars|USD)?\b", user_input, re.IGNORECASE)
     if budget_match:
         budget = int(budget_match.group(1))
+        logger.info(f"✅ Budget extracted: ${budget}")
+    else:
+        logger.warning("⚠️ No budget found, setting default to $1000")
+        budget = 1000
 
-    # 3️⃣ Duration (e.g., 4-day, 5 nights)
+    # 3️⃣ Duration (e.g., 4-day, 5 nights, or 'weekend')
+    logger.debug("Extracting duration")
     duration_match = re.search(r"(\d+)\s*[- ]?(day|days|night|nights)", user_input, re.IGNORECASE)
-    print("duration match ",duration_match)
     if duration_match:
         duration = int(duration_match.group(1))
+        logger.info(f"✅ Duration extracted: {duration} days")
+    elif "weekend" in user_input.lower():
+        duration = 3  # Assume Friday to Sunday
+        logger.info(f"✅ Duration extracted for 'weekend': 3 days")
+    elif "week" in user_input.lower():
+        # Calculate days remaining in 5-day forecast window
+        days_remaining = 5  # From today to 5 days ahead
+        duration = days_remaining
+        logger.info(f"✅ Duration extracted for 'week': {duration} days")
+    else:
+        logger.warning("⚠️ No duration found, setting default to 1 day")
+        duration = 1
 
-    # 4️⃣ Date/Month Extraction (NEW: Specific date first, then month name)
-
-    month = None  # Initialize 'month' which is used for the final return 'date'
-
-    # NEW LOGIC: Check for specific date formats (YYYY-MM-DD, MM/DD/YYYY, etc.)
-    # This regex is flexible with hyphens, slashes, and periods
+    # 4️⃣ Date Extraction (specific dates or relative terms within 5 days)
+    logger.debug("Extracting date")
+    # Specific date formats (YYYY-MM-DD, MM-DD-YYYY, DD-MM-YYYY)
     date_regex = r"(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})|(\d{1,2}[-/.]\d{1,2}[-/.]\d{4})"
     specific_date_match = re.search(date_regex, user_input)
 
     if specific_date_match:
-        # Get the full matched string (e.g., '2025-02-15' or '02/15/2025')
         date_str = specific_date_match.group(0)
-
-        # Try to parse the date into a standardized YYYY-MM-DD format
+        logger.debug(f"Found specific date: {date_str}")
         try:
-            # Try to parse based on common formats and convert to YYYY-MM-DD
-            # The parsing logic in 2_Itinerary_Generator.py is robust, but a standard format helps
-            if len(date_str.split(date_str[4])) == 3:  # Simple heuristic for YYYY-MM-DD/YYYY format
+            # Try parsing different date formats
+            if date_str.count('-') == 2 and date_str.startswith('20'):
                 dt_obj = datetime.strptime(date_str, '%Y-%m-%d')
-            else:  # Assume MM/DD/YYYY or similar
-                dt_obj = datetime.strptime(date_str, '%m-%d-%Y')
-
-            # Use the exact date string for the session state.
-            month = dt_obj.strftime('%Y-%m-%d')
-
-        except ValueError:
-            # If parsing fails, fall through to the month-name check below
-            pass
-    if month is None:
-        #Month or travel period
-        month_match = re.search(
-            r"(January|February|March|April|May|June|July|August|September|October|November|December|next month|this month)",
-            user_input, re.IGNORECASE
-        )
-        print(month_match)
-        if month_match:
-            month_raw = month_match.group(1).lower()
-            if "next" in month_raw:
-                next_month = (datetime.now().month % 12) + 1
-                month = datetime(datetime.now().year, next_month, 1).strftime("%B %Y")
-            elif "this" in month_raw:
-                month = datetime.now().strftime("%B %Y")
             else:
-                month = month_match.group(1).capitalize() + f" {datetime.now().year}"
-        else:
-            # Default fallback
-            next_month = (datetime.now().month % 12) + 1
-            month = datetime(datetime.now().year, next_month, 1).strftime("%B %Y")
+                dt_obj = datetime.strptime(date_str, '%m-%d-%Y')  # Handles MM-DD-YYYY, MM/DD/YYYY
+            parsed_date = dt_obj.date()
+            # Validate date is within 5 days from today
+            if today <= parsed_date <= today + timedelta(days=5):
+                date = parsed_date.strftime('%Y-%m-%d')
+                logger.info(f"✅ Specific date extracted and validated: {date}")
+            else:
+                logger.warning(f"⚠️ Specific date {date_str} is outside 5-day forecast window, defaulting to tomorrow")
+                date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+        except ValueError:
+            logger.warning(f"⚠️ Failed to parse specific date {date_str}, checking relative terms")
+            date = None
     else:
-        # Default fallback (original logic)
-        now = datetime.now()
-        next_month = (now.month % 12) + 1
-        year = now.year if next_month > now.month else now.year + 1
-        month = datetime(year, next_month, 1).strftime("%B %Y")
-    return {
+        # Check for relative date terms
+        user_input_lower = user_input.lower()
+        if "tomorrow" in user_input_lower:
+            date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+            logger.info(f"✅ Relative date 'tomorrow' extracted: {date}")
+        elif "weekend" in user_input_lower:
+            # Assume "weekend" starts on Friday
+            days_to_friday = (4 - today.weekday()) % 7  # Friday is 4 in weekday (0=Mon, 6=Sun)
+            if days_to_friday == 0:  # If today is Friday, use today
+                days_to_friday = 0
+            if days_to_friday <= 5:
+                date = (today + timedelta(days=days_to_friday)).strftime('%Y-%m-%d')
+                logger.info(f"✅ Relative date 'weekend' extracted (start from Friday): {date}")
+            else:
+                logger.warning(f"⚠️ 'Weekend' is outside 5-day forecast window, defaulting to tomorrow")
+                date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+        elif "week" in user_input_lower:
+            # Assume "this week" starts from today
+            date = today.strftime('%Y-%m-%d')
+            logger.info(f"✅ Relative date 'this week' extracted (start from today): {date}")
+        else:
+            logger.warning("⚠️ No valid date found, defaulting to tomorrow")
+            date = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+
+    result = {
         "destination": destination,
         "budget": budget,
         "duration": duration,
-        "date": month,
+        "date": date,
     }
-
+    logger.info(f"✅ Extraction complete: {result}")
+    return result
 
 if __name__ == "__main__":
-    # 🔍 Quick test
-    q = "Plan a 4-day trip to Boston in November under $800"
-    print(extract_entities(q))
+    # 🔍 Quick tests
+    test_queries = [
+        "Plan a 4-day trip to Miami starting tomorrow for under $1000",
+        "I need a 3-day itinerary for Paris starting from 2025-10-17",
+        "New York for the weekend with a $1500 budget",
+        "Show me things to do in London this week",
+        "Plan a trip to Boston in November"
+    ]
+    for q in test_queries:
+        logger.info(f"Testing query: {q}")
+        print(extract_entities(q))

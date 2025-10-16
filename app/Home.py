@@ -1,8 +1,9 @@
 import os
 import sys
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, date as date_obj
 import logging
+from datetime import timedelta
 
 # Configure logging
 logging.basicConfig(
@@ -21,6 +22,8 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
 from modules.nlp_extractor import extract_entities
 from modules.rag_engine import load_and_normalize_data, build_embeddings, INDEX_FILE, META_FILE
+from modules.attractions_api import fetch_attractions
+from modules.weather_api_new import get_forecast_summary
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 css_path = os.path.join(current_dir, 'assets', 'style.css')
@@ -30,6 +33,21 @@ try:
     logger.debug("Loading CSS file")
     with open(css_path, 'r') as f:
         css_content = f.read()
+    # Append custom CSS for examples section
+    css_content += """
+    .example-card {
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .example-card span.keyword {
+        font-weight: 600;
+        color: #007bff;
+    }
+    """
     st.markdown(
         f"<style>{css_content}</style>",
         unsafe_allow_html=True
@@ -58,7 +76,7 @@ try:
     logger.debug("Rendering sidebar")
     st.sidebar.image("app/assets/img.png", use_container_width=True)
     st.sidebar.markdown("### ✈️ AI Travel Planner")
-    st.sidebar.write("Personalized itineraries using Generative AI")
+    st.sidebar.caption("Personalized itineraries using Generative AI")
     st.sidebar.markdown("---")
     st.sidebar.subheader("🧭 Navigation")
     st.sidebar.page_link("Home.py", label="🏠 Home")
@@ -81,32 +99,38 @@ if 'rag_index_built' not in st.session_state:
     st.session_state.rag_index_built = faiss_exists and meta_exists
     logger.info(f"RAG index status: {'Built' if st.session_state.rag_index_built else 'Not Built'}")
 
-def build_rag_index_action():
-    """Function to load data and build the FAISS index synchronously."""
-    logger.info("⚡ Starting RAG index build")
+# City-specific index build
+st.sidebar.markdown("### Build City-Specific Index")
+city_for_index = st.sidebar.text_input("Enter City for Index Build")
+build_index_button = st.sidebar.button("⚙️ Build Attraction Index for City", type="primary", disabled=not city_for_index.strip())
+
+def build_rag_index_for_city(city):
+    """Fetch attractions for city and build FAISS index."""
+    logger.info(f"⚡ Starting city-specific RAG index build for {city}")
     st.session_state.rag_index_built = False
     try:
-        with st.spinner("Loading attraction data..."):
-            logger.debug("Loading and normalizing attraction data")
-            entries = load_and_normalize_data()
-            if not entries:
-                logger.error("❌ Attraction data is empty")
-                raise ValueError("Attraction data is empty. Cannot build index.")
-            logger.debug(f"Loaded {len(entries)} attraction entries")
+        with st.spinner(f"Fetching attractions for {city}..."):
+            logger.debug(f"Fetching attractions for {city}")
+            attractions = fetch_attractions(city)
+            if not attractions:
+                raise ValueError(f"No attractions found for {city}")
 
-        with st.spinner("Building vector index (may take 30-60 seconds)..."):
-            logger.debug("Building FAISS index")
-            build_embeddings(entries)
-            logger.info("✅ FAISS index built successfully")
+        with st.spinner(f"Building vector index for {city} (may take 30-60 seconds)..."):
+            logger.debug(f"Building FAISS index for {len(attractions)} attractions")
+            build_embeddings(attractions)  # Assuming build_embeddings can handle list of attractions
 
         st.session_state.rag_index_built = True
-        st.success("✅ Attraction Index Built Successfully! You can now generate itineraries.")
-        logger.info("✅ RAG index build completed")
+        st.success(f"✅ Attraction Index Built Successfully for {city}! You can now generate itineraries.")
+        logger.info(f"✅ RAG index build completed for {city}")
     except Exception as e:
-        logger.error(f"❌ Error building RAG index: {e}")
+        logger.error(f"❌ Error building RAG index for {city}: {e}")
         st.session_state.rag_index_built = False
-        st.error(f"❌ Error building RAG index: {e}.")
+        st.error(f"❌ Error building RAG index for {city}: {e}.")
         st.exception(e)
+
+if build_index_button:
+    logger.info(f"⚡ User triggered city-specific RAG index build for {city_for_index}")
+    build_rag_index_for_city(city_for_index)
 
 if st.session_state.rag_index_built:
     st.sidebar.success("Index Status: Built")
@@ -114,9 +138,6 @@ if st.session_state.rag_index_built:
 else:
     st.sidebar.warning("Index Status: Not Built (Will use general knowledge)")
     logger.debug("RAG index status: Not Built")
-    if st.sidebar.button("⚙️ Build Attraction Index", type="primary"):
-        logger.info("⚡ User triggered RAG index build")
-        build_rag_index_action()
 
 # --- Title ---
 st.title("🌍 Plan Your Next Adventure")
@@ -124,50 +145,61 @@ st.caption("Let AI craft your perfect trip based on budget, duration, and even w
 logger.info("Rendered page title and caption")
 
 # --- Examples Section ---
-st.markdown("### 💡 Input Examples:")
-st.markdown(
-    """
-    Provide your travel request in natural language. The AI will extract the **destination**, **duration**, **budget**, and **date**.
-    """,
-    unsafe_allow_html=True
-)
-st.markdown(
-    """
-    <div style="background-color: #f0f8ff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #007bff;">
-        <b>1. Standard:</b>
-        <br>
-        Plan a <span style="color: #28a745; font-weight: bold;">4-day</span> trip to <span style="color: #6f42c1; font-weight: bold;">Miami</span> in <span style="color: #ffc107; font-weight: bold;">December</span> for <span style="color: #dc3545; font-weight: bold;">under $1000</span>.
-    </div>
-    <div style="background-color: #fff8f2; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #fd7e14;">
-        <b>2. Specific Date:</b>
-        <br>
-        I need a <span style="color: #28a745; font-weight: bold;">5-night</span> itinerary for <span style="color: #6f42c1; font-weight: bold;">Paris</span> starting from <span style="color: #ffc107; font-weight: bold;">2026-03-20</span>.
-    </div>
-    <div style="background-color: #f2fcf5; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid #28a745;">
-        <b>3. Minimal:</b>
-        <br>
-        <span style="color: #6f42c1; font-weight: bold;">New York</span> for <span style="color: #28a745; font-weight: bold;">a week</span> with a <span style="color: #dc3545; font-weight: bold;">$1500 budget</span>.
-    </div>
-    <div style="background-color: #f7f0ff; padding: 10px; border-radius: 8px; border-left: 5px solid #6f42c1;">
-        <b>4. General:</b>
-        <br>
-        Show me things to do in <span style="color: #6f42c1; font-weight: bold;">London</span> <span style="color: #ffc107; font-weight: bold;">next month</span>.
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+st.markdown("### 💡 Example Inputs")
+st.info("Weather forecasts are available only for the next 5 days.", icon="ℹ️")
+with st.expander("See example travel requests", expanded=False):
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(
+            """
+            <div class="example-card">
+                <b>Standard</b><br>
+                Plan a <span class="keyword">4-day</span> trip to <span class="keyword">Miami</span> starting <span class="keyword">tomorrow</span> for under <span class="keyword">$1000</span>.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            """
+            <div class="example-card">
+                <b>Specific Date</b><br>
+                I need a <span class="keyword">3-day</span> itinerary for <span class="keyword">Paris</span> starting from <span class="keyword">2025-10-17</span>.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    with col2:
+        st.markdown(
+            """
+            <div class="example-card">
+                <b>Minimal</b><br>
+                <span class="keyword">New York</span> for <span class="keyword">the weekend</span> with a <span class="keyword">$1500 budget</span>.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            """
+            <div class="example-card">
+                <b>General</b><br>
+                Show me things to do in <span class="keyword">London</span> <span class="keyword">this week</span>.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 logger.info("✅ Examples section rendered")
 
-# User input
-user_query = st.text_input("Enter your Plan:")
+# --- User Input ---
+st.markdown("### 📝 Your Travel Plan")
+user_query = st.text_input("Enter your Plan:", placeholder="e.g., Plan a 3-day trip to Paris this weekend")
 col1, col2 = st.columns([1, 3])
 with col1:
-    generate = st.button("✨ Generate Plan")
+    generate = st.button("✨ Generate Plan", type="primary")
 with col2:
     st.caption("AI will extract details and prepare your plan instantly!")
 logger.info("Rendered user input section")
 
-# Handle plan generation
+# --- Handle Plan Generation ---
 if generate:
     logger.info(f"⚡ User submitted query: {user_query}")
     if not user_query.strip():
@@ -182,6 +214,20 @@ if generate:
             duration = details.get("duration")
             date = details.get("date")
             logger.info(f"Extracted details: destination={destination}, budget={budget}, duration={duration}, date={date}")
+
+            # Validate date for weather API (within 5 days)
+            try:
+                parsed_date = datetime.strptime(date, '%Y-%m-%d').date()
+                today = date_obj.today()
+                if parsed_date > today + timedelta(days=5):
+                    logger.warning(f"⚠️ Requested date {date} is beyond 5-day weather forecast limit")
+                    st.warning("Weather forecasts are only available for the next 5 days. Please choose a date between {} and {}.".format(
+                        today.strftime('%Y-%m-%d'), (today + timedelta(days=5)).strftime('%Y-%m-%d')))
+                    st.stop()
+            except ValueError:
+                logger.warning(f"⚠️ Invalid date format in query: {date}")
+                st.warning("Could not parse the date in your query. Please use YYYY-MM-DD format or terms like 'tomorrow' or 'this weekend'.")
+                st.stop()
 
             st.session_state.update({
                 "query": user_query,
