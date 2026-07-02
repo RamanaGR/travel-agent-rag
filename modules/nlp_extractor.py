@@ -4,11 +4,13 @@ Extracts destination, dates, duration, and budget from natural language queries.
 Uses spaCy + regex, aligned with OpenWeatherMap 5-day forecast restriction.
 """
 
-import re
-import spacy
-from datetime import datetime, timedelta, date as date_obj
-import streamlit as st
 import logging
+import re
+from datetime import date as date_obj, datetime, timedelta
+
+import spacy
+import streamlit as st
+from spacy.cli import download
 
 # Configure logging
 logging.basicConfig(

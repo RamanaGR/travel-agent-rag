@@ -1,11 +1,11 @@
-streamlit
-openai
-faiss-cpu
+streamlit>=1.32.0,<2.0.0
+openai>=1.14.0,<2.0.0
+faiss-cpu>=1.7.4,<2.0.0
 spacy==3.7.2
 blis==0.7.11; platform_system == "Linux" and platform_machine == "x86_64"
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
-requests
+requests>=2.31.0,<3.0.0
 numpy==1.26.4
-pandas
-python-dotenv
-streamlit-lottie
+pandas>=2.0.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0
+rank-bm25>=0.2.2,<1.0.0

@@ -1,0 +1,27 @@
+:root {
+    --primary: #F97316;
+    --primary-hover: #EA580C;
+    --secondary: #A855F7;
+    --accent: #FBBF24;
+    --app-bg-fallback: #fffbf5;
+    --app-bg-base: linear-gradient(165deg, #fffbf5 0%, #fff7ed 35%, #ffedd5 70%, #fed7aa 100%);
+    --app-bg-orb-1: radial-gradient(ellipse 60% 50% at 8% 25%, rgba(168, 85, 247, 0.09), transparent 72%);
+    --app-bg-orb-2: radial-gradient(ellipse 55% 45% at 92% 70%, rgba(249, 115, 22, 0.1), transparent 72%);
+    --app-bg-orb-3: radial-gradient(ellipse 45% 40% at 55% 8%, rgba(251, 191, 36, 0.08), transparent 70%);
+    --app-bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath fill='none' stroke='%23a8a29e' stroke-opacity='0.08' stroke-width='0.5' d='M0 80 Q25 60 50 80 T100 80'/%3E%3Cpath fill='none' stroke='%23a8a29e' stroke-opacity='0.06' stroke-width='0.5' d='M0 60 Q25 40 50 60 T100 60'/%3E%3C/svg%3E");
+    --bg-overlay: rgba(255, 255, 255, 0.9);
+    --bg-gradient-overlay: linear-gradient(135deg, rgba(255, 247, 237, 0.5) 0%, rgba(255, 237, 213, 0.2) 100%);
+    --content-glass-border: rgba(254, 215, 170, 0.7);
+    --sidebar-bg: #ffffff;
+    --text-heading: #7C2D12;
+    --text-main: #1C1917;
+    --text-muted: #57534e;
+    --badge-info-bg: #ffedd5;
+    --badge-info-text: #c2410c;
+    --badge-success-bg: #fef3c7;
+    --badge-success-text: #b45309;
+    --step-active-bg: linear-gradient(135deg, #F97316, #A855F7);
+    --btn-bg: linear-gradient(135deg, #F97316, #A855F7);
+    --btn-bg-hover: linear-gradient(135deg, #EA580C, #9333EA);
+    --scrollbar: #F97316;
+}

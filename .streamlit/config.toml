@@ -1,6 +1,9 @@
 [theme]
-primaryColor = "#2563EB"             # Blue accent
-backgroundColor = "#F8FAFC"          # Soft white
-secondaryBackgroundColor = "#FFFFFF" # Card background
-textColor = "#1E293B"
+primaryColor = "#F97316"
+backgroundColor = "#FFFBF5"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1C1917"
 font = "sans serif"
+
+[server]
+enableStaticServing = true

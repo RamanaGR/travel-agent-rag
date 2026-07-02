@@ -1,124 +1,131 @@
-# 🌍 Generative AI Travel Planner Agent  
-### _Designing an LLM-Powered System for Personalized Itineraries_  
+# Generative AI Travel Planner Agent
 
-![App Screenshot](app/assets/img.png)
+Streamlit web application that uses LLMs and real-time APIs to generate personalized, budget-friendly, and weather-aware travel itineraries.
 
----
+**Deployed app:** [travel-agent-ragai.streamlit.app](https://travel-agent-ragai.streamlit.app)
 
-## 🎓 Project Overview
-This project — **Generative AI Travel Planner Agent** — is a **Streamlit-based web application** that leverages **Large Language Models (LLMs)** and **real-time data APIs** to generate personalized, budget-friendly, and weather-aware travel itineraries.  
+## Features
 
-It demonstrates how **AI, NLP, and data retrieval techniques** can come together to automate one of the most time-consuming parts of travel — planning an ideal trip.
+- Natural-language trip planning (destination, budget, duration, date)
+- Hybrid RAG attraction ranking (FAISS + BM25 + metadata fusion)
+- GPT-4o itinerary generation with grounding and source citations
+- OpenWeatherMap 5-day forecast integration
+- TripAdvisor attractions via RapidAPI
+- Per-city FAISS indexes with embedding cache
+- Four switchable UI themes (default: **Sunset Wanderlust**)
 
-🔗 **Deployed App:** [https://travel-agent-ragai.streamlit.app](https://travel-agent-ragai.streamlit.app)  
-📁 **GitHub Repo:** [https://github.com/RamanaGR/travel-agent-rag](https://github.com/RamanaGR/travel-agent-rag)  
-👨‍🎓 **Author:** Ramana Gangarao  
-🏫 **Atlantis University | Master’s Capstone Project | October 2025**
+## Tech Stack
 
----
+| Category | Tools |
+|----------|-------|
+| Frontend | Streamlit, CSS themes |
+| AI & NLP | OpenAI GPT-4o, spaCy |
+| Data APIs | OpenWeatherMap, TripAdvisor (RapidAPI) |
+| Search | FAISS, BM25 (rank-bm25), NumPy |
+| Runtime | Python 3.11+ |
 
-## 🧠 Core Features
-- 🏙 **Destination Recognition:** Extracts city, month, duration, and budget from natural language queries.  
-- 🤖 **AI-Powered Planning:** Uses GPT-4 Turbo to generate structured daily itineraries.  
-- 🌤 **Weather Awareness:** Integrates live forecasts from **OpenWeatherMap API**.  
-- 🗺 **Attraction Retrieval:** Fetches top attractions via **TripAdvisor RapidAPI**.  
-- 💾 **RAG-Based Recommendations:** Combines **FAISS embeddings** and **OpenAI vectors** for smarter place suggestions.  
-- 🎨 **Modern Streamlit UI:** Clean layout, responsive sidebar, and custom CSS styling.  
+## Setup
 
----
+### 1. Clone and install
 
-## ⚙️ Tech Stack
-| Category | Tools / Frameworks |
-|-----------|-------------------|
-| **Frontend** | Streamlit, HTML, CSS |
-| **AI & NLP** | OpenAI GPT-4 Turbo, SpaCy |
-| **Data APIs** | OpenWeatherMap, TripAdvisor (via RapidAPI) |
-| **Search & Indexing** | FAISS, NumPy |
-| **Backend** | Python 3.11+ |
-| **Deployment** | Streamlit Cloud |
-
----
-
-## 🔑 Setup Instructions
-
-### 1. Clone Repository
 ```bash
 git clone https://github.com/RamanaGR/travel-agent-rag.git
 cd travel-agent-rag
-```
-### 2. Create Virtual Environment
-```bash
-python -m venv env
-source env/bin/activate       # Mac/Linux
-env\Scripts\activate          # Windows
-```
-### 3. Install Dependencies
-```bash
+python -m venv .venv
+source .venv/bin/activate   # Mac/Linux
+# .venv\Scripts\activate    # Windows
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
 ```
-### 4. Set Environment Variables
-Create a .env file in your root folder with:
+
+### 2. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your API keys:
+
 ```bash
 OPENAI_API_KEY=your_openai_api_key
-OPENWEATHER_API_KEY=your_openweather_api_key
+OPENWEATHER_KEY=your_openweather_api_key
 RAPIDAPI_KEY=your_rapidapi_key
 USE_OFFLINE_MODE=False
+DEBUG=False
+UI_THEME=sunset
 ```
-### 5. Run Locally
+
+### 3. Run locally
+
 ```bash
 streamlit run app/Home.py
 ```
-Then open the link displayed in your terminal.
 
-### ☁️ Streamlit Cloud Deployment
-1. Push your complete codebase to GitHub.
-2. Visit streamlit.io/cloud → Deploy from GitHub.
-3. Add environment secrets in Settings → Advanced → Secrets.
-4. Click Deploy — your app will be live in minutes!
+Or:
 
-### 📊 Evaluation Summary
-| Metric                | Result  | Description                      |
-| --------------------- | ------- | -------------------------------- |
-| **Accuracy**          | 90%     | Matches expert itinerary content |
-| **Budget Compliance** | 95%     | Plans stay within limits         |
-| **User Satisfaction** | 4.2 / 5 | Based on test feedback           |
-| **Response Time**     | ~5s     | Optimized with caching           |
-
-### 🔍 Research Methodology
-
-This project adopts a Mixed-Method Research Approach, combining:
-
-**Quantitative analysis** → model accuracy, response time, and cost adherence.
-
-**Qualitative evaluation** → user feedback, interface usability, and personalization.
-
-It follows the Design Science Research (DSR) framework — focusing on building a functional AI artifact, evaluating performance, and refining based on results.
-
-### 🧩 Future Enhancements
-
-* 🌐 Integrate Google Places API for richer location data.
-* 🧭 Support multi-city itinerary planning.
-* 💬 Add voice input and chat-based itinerary updates.
-* 💾 Replace local FAISS with Pinecone / Qdrant for scalable retrieval.
-* 🎞 Introduce visual itinerary timeline with maps and icons.
-
-### 🏁 Conclusion
-
-The **Generative AI Travel Planner Agent** demonstrates how LLMs and RAG techniques can automate complex travel planning workflows.
-It merges AI reasoning, real-time data, and human-centered design, resulting in a practical, scalable, and innovative solution for the modern traveler.
-
-### 🧾 Citation
-
-If referencing this project in academic work:
-bash
+```bash
+./streamlit_app.sh
 ```
-Gangarao, R. (2025). Generative AI Travel Planner Agent: Designing an LLM-Powered System for Personalized Itineraries. Atlantis University.
+
+## Project Structure
+
 ```
-### 💬 Connect
+travel-agent-rag/
+├── app/
+│   ├── Home.py                     # Entry point
+│   ├── components/
+│   │   └── layout.py               # Sidebar, themes, shared UI
+│   ├── pages/
+│   │   ├── 0_Theme_Preview.py
+│   │   ├── 1_Travel_Results.py
+│   │   └── 2_Itinerary_Generator.py
+│   └── assets/
+│       ├── style.css
+│       └── themes/                 # ocean, sunset, minimal, tropical
+├── config/
+│   └── config.py
+├── data/
+│   ├── eval/queries.json           # Retrieval eval fixtures
+│   └── indexes/                    # Per-city indexes (generated, gitignored)
+├── modules/
+│   ├── attractions_api.py
+│   ├── nlp_extractor.py
+│   ├── query_builder.py
+│   ├── rag_engine.py
+│   ├── retrieval.py
+│   └── weather_api.py
+├── scripts/
+│   └── eval_retrieval.py
+├── .env.example
+├── .streamlit/
+│   ├── config.toml
+│   ├── theme_pref.toml
+│   └── secrets.toml.example        # Template for Streamlit Cloud
+├── requirements.txt
+└── streamlit_app.sh
+```
 
-📧 Email: [ramana.gangarao@atlantisuniversity.edu](ramana.gangarao@atlantisuniversity.edu)
+## Retrieval Evaluation
 
-🌐 LinkedIn: https://www.linkedin.com/in/ramana-gangarao/
+```bash
+python scripts/eval_retrieval.py --rebuild
+```
 
----
+Requires valid API keys and network access to fetch attractions.
+
+## Streamlit Cloud Deployment
+
+1. Push this repository to GitHub.
+2. Create a new app at [share.streamlit.io](https://share.streamlit.io).
+3. Set **Main file path** to `app/Home.py`.
+4. Add secrets under **Settings → Secrets** (see `.streamlit/secrets.toml.example`).
+5. On first use, indexes build automatically when a user generates a plan.
+
+## Notes
+
+- Weather forecasts are limited to OpenWeather's **5-day window**.
+- Runtime caches (`data/attractions.json`, `data/indexes/`, etc.) are created locally and not committed.
+- Never commit `.env` or real API keys.
+
+## Author
+
+Ramana Gangarao — Atlantis University Master's Capstone Project (2025)

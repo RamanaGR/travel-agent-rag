@@ -1,6 +1,42 @@
-*.pyc
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.pyo
+
+# Virtual environments
 .env
+.venv/
+env/
 travelai_env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
 *.log
-.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime caches and generated artifacts (recreated on first run)
+data/api_usage*.txt
+data/weather_cache*.json
+data/attractions.json
+data/attractions_counter.txt
+data/geoids.json
+data/attraction_meta.json
+data/attraction_embeddings.npy
+data/faiss_index.bin
+data/indexes/*
+!data/indexes/.gitkeep
+
+# Keep eval fixtures
+!data/eval/
+!data/eval/**
