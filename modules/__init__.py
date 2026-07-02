@@ -1,2 +1,1 @@
-def config():
-    return None
+"""Travel agent application modules."""

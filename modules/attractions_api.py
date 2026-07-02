@@ -2,7 +2,11 @@ import requests
 import os
 import json
 import logging
-from config.config import RAPIDAPI_KEY, RAPIDAPI_HOST, CACHE_FILE, COUNTER_FILE, GEOID_CACHE_FILE
+from config.config import CACHE_FILE, COUNTER_FILE, GEOID_CACHE_FILE, RAPIDAPI_HOST, RAPIDAPI_KEY
+
+CACHE_FILE = str(CACHE_FILE)
+COUNTER_FILE = str(COUNTER_FILE)
+GEOID_CACHE_FILE = str(GEOID_CACHE_FILE)
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,

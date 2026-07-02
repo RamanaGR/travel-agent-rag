@@ -1,0 +1,30 @@
+[
+  {
+    "query": "4-day art and culture trip to Paris under $1500",
+    "city": "Paris",
+    "budget": 1500,
+    "duration": 4,
+    "expected_names": ["Louvre", "Eiffel", "Arc de Triomphe", "Sacré", "Marais"]
+  },
+  {
+    "query": "Plan a beach and nightlife weekend in Miami under $1000",
+    "city": "Miami",
+    "budget": 1000,
+    "duration": 3,
+    "expected_names": ["Bayside", "Wynwood", "South Beach", "Vizcaya"]
+  },
+  {
+    "query": "3-day family trip to Las Vegas with museums and shows",
+    "city": "Las Vegas",
+    "budget": 1200,
+    "duration": 3,
+    "expected_names": ["Strip", "Fremont", "Bellagio", "museum"]
+  },
+  {
+    "query": "Show me historic landmarks and food in London this week",
+    "city": "London",
+    "budget": 2000,
+    "duration": 5,
+    "expected_names": ["Tower", "British Museum", "Westminster", "Buckingham"]
+  }
+]
